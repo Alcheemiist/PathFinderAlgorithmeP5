@@ -48,6 +48,13 @@ const   height = 800;
 const   Xb = width / 20;
 const   Yb = height / 20;
 
+
+var Xpointx = 0
+var Xpointy = 0
+
+var Ypointy = 0
+var Ypointx = 0
+
 export interface Props {
   data: {
     // name: string;
@@ -180,10 +187,14 @@ export default function Dashboard()
 //
   const setWalls = (p5: p5Types) => {
       // init default variables 
-      var x = 13 * 20 - 20;
-      var y = 10 * 20 - 20;
-      var dx2 = 71 * 20 - 20 ;
-      var dy2 = 39 * 20 - 20;
+      // var x = 15 * 20 - 20;
+      // var y = 15 * 20 - 20;
+      // var dx2 = 71 * 20 - 20 ;
+      // var dy2 = 39 * 20 - 20;
+      var x = Xpointx;
+      var y = Xpointy;
+      var dx2 = Ypointx;
+      var dy2 = Ypointy;
       p5.fill("orange");
       p5.square(x, y, 20);
       p5.fill("grey");
@@ -194,10 +205,14 @@ export default function Dashboard()
   }
   const visualiziation = (p5: p5Types, _queue : any) => {
     // _queue is the path
-    var x = 13 * 20 - 20;
-    var y = 10 * 20 - 20;
-    var dx2 = 71 * 20 - 20 ;
-    var dy2 = 39 * 20 - 20;
+    var x = Xpointx;
+    var y = Xpointy;
+    var dx2 = Ypointx;
+    var dy2 = Ypointy;
+    // var x = 15 * 20 - 20;
+    // var y = 15 * 20 - 20;
+    // var dx2 = 71  * 20 - 20 ;
+    // var dy2 = 39  * 20 - 20;
 
     // draw path
     while (_queue.length > 0)
@@ -220,10 +235,14 @@ export default function Dashboard()
     // white 0; red 2; green 3; brown 4; yellow 8;  black;
     // init default variables
       setWalls(p5)
-      var x = 13 * 20 - 20;
-      var y = 10 * 20 - 20;
-      var dx2 = 71 * 20 - 20 ;
-      var dy2 = 39 * 20 - 20;
+      var x = Xpointx;
+      var y = Xpointy;
+      var dx2 = Ypointx;
+      var dy2 = Ypointy;
+      // var x = 15 * 20 - 20;
+      // var y = 15 * 20 - 20;
+      // var dx2 = 71 * 20 - 20 ;
+      // var dy2 = 39 * 20 - 20;
       //
       const unit = 20;
       // 
@@ -325,10 +344,48 @@ export default function Dashboard()
             var tmpNode = new Node(Nq[i].y, Nq[i].x, true, Nq[i].index)
 
             const IndexO = Nq[i].index
-
-            var tmpG = Math.abs(IndexO - _start)
-            var tmpH = Math.abs(_end - IndexO)
+            var tmpG = Math.abs(IndexO - _start) * 1
+            var tmpH = Math.abs(_end - IndexO) * 1
+            //
+            var height_start = _start / Xb // 0 - Xb
+            var height_end = _end / Xb // 0 - Xb
+            var heightIndexO = IndexO / Xb // 0 - Xb
+            //
+            var width_start = _start % Xb  // 0 - Yb
+            var width_end = _end % Xb  // 0 - Yb
+            var widthIndexO = IndexO % Xb  // 0 - Yb
+            //
+            // var DirH = widthIndexO - width_start 
+            var DirH = Math.abs(widthIndexO - width_end) * 1
+            var DirV = Math.abs(heightIndexO - height_end) * 1
+            var Dh = Math.abs(widthIndexO - width_start) * 1
+            var Dv = Math.abs(heightIndexO - height_start) * 1
+            //
+            tmpG = DirH + Dh * 0
+            tmpH = DirV+ Dv * 0
             
+            // remove garbadge 
+            // check when opposite of direction 
+            // reformule to be interactif 
+            // --- cover the most rectangulaire space beetwen square and add coeffic to
+            // add prents to Nodes
+            // --- each cell on Clossed queue to be P = Distance from start + 4 * Turns(change of direction H to V vice versa) 
+            // --- then trace path by adding to the sum the min cost from each parent
+            
+            var Dis = _end - IndexO
+            
+            if (Dis)
+            {
+              if ((IndexO % Xb) < (_start % Xb))
+                continue
+            }
+            else
+            {
+              if ((IndexO % Xb) > (_start % Xb))
+                continue
+            } 
+
+
             console.log( " Nq[i].index : " ,Nq[i].index,"tmpG: " , tmpG , "tmpH: " , tmpH)
 
             tmpNode.setG(tmpG)
@@ -369,13 +426,8 @@ export default function Dashboard()
         state.data.expY = y;
         p5.text("X : " + x + ", " + y, 20,170);
 
-        // setstate({
-        //   data :  { 
-        //     expX: state.data.expX,
-        //     expY: state.data.expY,
-        //     sepX: x,
-        //     sepY: y,
-        //   }})
+        Xpointx = x
+        Xpointy = y
       }
     }
     if (p5.key === 'e' && sep === false)
@@ -384,6 +436,8 @@ export default function Dashboard()
       p5.fill("green");
       let x = Math.round(p5.mouseX / 20) * 20;
       let y = Math.round(p5.mouseY / 20) * 20;
+      
+      
       console.log("hello " , x, y);
       p5.square(x, y, 20);
 
@@ -397,6 +451,8 @@ export default function Dashboard()
         state.data.sepY = y;
         p5.text("Y : " + x + ", " + y, 20,190);
 
+        Ypointx = x
+        Ypointy = y
         // setstate({
         //   data :  {  
         //     expX: x,
