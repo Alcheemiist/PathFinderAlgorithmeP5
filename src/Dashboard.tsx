@@ -27,7 +27,7 @@ class Node {
   setX(x : number) { this.x = x;  }
   setY(y : number) { this.y = y;  }
   setF(f : number) {  this.f = f; }
-  setf() {  this.f = Math.abs(this.g * this.h) }
+  setf() {  this.f = Math.abs(this.g + this.h) }
   setG(g : number) {  this.g = g; }
   setH(h : number) {  this.h = h; }
   setVisited(visited : boolean) {  this.visited = visited; }
@@ -64,7 +64,11 @@ export default function Dashboard()
   var     sep = false;
   var     isFound = false;
   let     Board =  new Array(Xb * Yb).fill(0);
-
+  var     Step = 0
+  let  BoardNode = new Array(Xb).fill(new Array(Yb).fill(new Node(0, 0, false, 0)));
+  
+  //BoardNode[0][0] = new Node(0, 0, false, 0);
+  
 // 
   // acces with Board[y * Xb + x]
   var state = {
@@ -84,7 +88,7 @@ export default function Dashboard()
 
 		p5.createCanvas(width, height).parent(canvasParentRef);
     p5.stroke(50); // Set line drawing color to white
-    p5.frameRate(1000);
+    p5.frameRate(10);
 		p5.background('#222222')
 
     for (let i = 0; i < 1400; i+=20) {
@@ -243,27 +247,26 @@ export default function Dashboard()
       Nodes[_start]  = new Node(y,x,true, _start)
       Nodes[_start].g = 1
       Nodes[_start].h = _end - _start
-      Nodes[_start].f = Nodes[_start].g * Nodes[_start].h
+      Nodes[_start].f = Nodes[_start].g + Nodes[_start].h
       Open.push(Nodes[_start ])
       _queue.push(Nodes[_start])
 
-      var Step = 0
       while (Open.length > 0 && !isFound)
       {
-        if (Step >= 3)
+        // 1000
+        if (Step >= 1000 && false)
         {
           isFound = true
           break
         }
+        // console.log("Step : " , Step)
+        // console.log("Actual Open : ", Open.length ,"\n")
+        // console.table (Open)
 
-        console.log("Step : " , Step)
-        console.log("Actual Open : " )
-        console.table (Open)
-
-        // step 2
+      // step 2
         if (Open.length <= 0 ) alert("Open is Empty")
       // step 3
-        var min     = Open[0].f,index = 0
+        var min     = Open[0].f , index = 0
         for (let i = 0; i < Open.length; i++)
         {
           if (Open[i].f < min)
@@ -275,48 +278,72 @@ export default function Dashboard()
         // remove the smallest element from the open list to the closed list
         _current = Open[index].index
         Closed.push(Open[index])
-        Open.slice(index, 1)
-        console.log("min: " , min , "\ncurrent: " , _current, " ")
-        console.log("After Open: " )
+        // console.log("index removed: " , index , "\n")
+        Open.splice(index, 1)
+        // console.log("min: " , min , "\ncurrent: " , _current, " ")
+        // console.log("After Open: ", Open.length ,"\n" )
         console.table(Open)
-
-        // for (let i = 0; i < Open.length; i++)
         // if node is goal then alert found 
         if (_current === _end)
         {
-          alert("Found")
+          // alert("Found 1")
           isFound = true
+          break
         }
       // step 4
         // find the neighbors of the current node
         var  Nq = new Array()
         let  tmp = new Node(_current - Xb,_current - Xb,false,_current - Xb)
         let  tmp1 = new Node(_current + 1,_current + 1,false, _current + 1)
-        let  tmp2 = new Node(_current + 1,_current + 1,false, _current + Xb)
+        let  tmp2 = new Node(_current +  Xb,_current + 1,false, _current + Xb)
         let  tmp3 = new Node(_current - 1,_current - 1,false, _current - 1)
-        Nq.push(tmp)
-        Nq.push(tmp1)
-        Nq.push(tmp2)
-        Nq.push(tmp3)
-      // step 5
+
+        if (!(_current % Xb === 0))
+          Nq.push(tmp3)
+
+        if (!((_current % Xb === 0) && ((_current - 1) % Xb === 0)))
+          Nq.push(tmp1)
+
+        if (_current > Xb - 1 && _current - Xb > 0) 
+          Nq.push(tmp)
+       
+        if (_current < Yb * (Xb - 1))
+          Nq.push(tmp2)
+
+        console.log("Nq: " , Nq.length)
+        // step 5
         for (let i = 0; i < Nq.length; i++)
         {
           if (Nq[i].index === _end)
-            alert("END FOUND")
+          {
+            // alert("END FOUND")
+            isFound = true
+            break
+          }
           if (Nq[i].index >= 0 && Nq[i].index < Xb * Yb && Board[Nq[i].index] !== 4 &&  _visited[Nq[i].index] === false)
           {
             var tmpNode = new Node(Nq[i].y, Nq[i].x, true, Nq[i].index)
-            tmpNode.setG((_start - Nq[i].index))
-            tmpNode.setH((_end - Nq[i].index))
+
+            const IndexO = Nq[i].index
+
+            var tmpG = Math.abs(IndexO - _start)
+            var tmpH = Math.abs(_end - IndexO)
+            
+            console.log( " Nq[i].index : " ,Nq[i].index,"tmpG: " , tmpG , "tmpH: " , tmpH)
+
+            tmpNode.setG(tmpG)
+            tmpNode.setH(tmpH)
             tmpNode.setf()
+
             Open.push(tmpNode)
-            _visited[Nq[i].index] = true
           }
+          _visited[Nq[i].index] = true
         }
         Step++
-        console.table("Closed", Closed)
+        // console.table("Closed", Closed)
         console.table("---------------------")
       }
+     
       // step 6
       for (let i = 0; i < Closed.length; i++)
         _queue.push(Closed[i])
