@@ -2,7 +2,46 @@ import React, {useState} from 'react';
 import Sketch from "react-p5";
 import p5Types from "p5";
 import './Dashboard.css';
-import { wait } from '@testing-library/user-event/dist/utils';
+
+class Node {
+  x: number;
+  y : number;
+  visited : boolean;
+  f : number;
+  g : number;
+  h : number;
+  index: number;
+  // _parent: Node;
+  
+  constructor(_x : number, _y : number, _visited : boolean, _index : number) {
+    this.x = _x;
+    this.y = _y;
+    this.visited = _visited;
+    this.index = _index;
+
+    this.f = 0;
+    this.g = 0;
+    this.h = 0;
+    // this._parent = new Node(0, 0, false, 0);
+;  }
+  setX(x : number) { this.x = x;  }
+  setY(y : number) { this.y = y;  }
+  setF(f : number) {  this.f = f; }
+  setf() {  this.f = Math.abs(this.g * this.h) }
+  setG(g : number) {  this.g = g; }
+  setH(h : number) {  this.h = h; }
+  setVisited(visited : boolean) {  this.visited = visited; }
+  // setParent(parent : Node) {  this._parent = parent; }
+
+  getX() { return this.x; }
+  getY() { return this.y; }
+  getF() { return this.f; }
+  getG() { return this.g; }
+  getH() { return this.h; }
+  getVisited() { return this.visited; }
+  // getParent() { return this._parent; }
+
+}
 
 const   width = 1440;
 const   height = 800;
@@ -26,6 +65,7 @@ export default function Dashboard()
   var     isFound = false;
   let     Board =  new Array(Xb * Yb).fill(0);
 
+// 
   // acces with Board[y * Xb + x]
   var state = {
     board:{
@@ -133,6 +173,156 @@ export default function Dashboard()
     }
     infoBoard(p5);
   }
+//
+  const setWalls = (p5: p5Types) => {
+      // init default variables 
+      var x = 13 * 20 - 20;
+      var y = 10 * 20 - 20;
+      var dx2 = 71 * 20 - 20 ;
+      var dy2 = 39 * 20 - 20;
+      p5.fill("orange");
+      p5.square(x, y, 20);
+      p5.fill("grey");
+      p5.square(dx2, dy2, 20);
+      // walls 
+      for (var i = 0; i < 20; i++)
+        Board[(10 + i) * Xb + 29] = 4;
+  }
+  const visualiziation = (p5: p5Types, _queue : any) => {
+    // _queue is the path
+    var x = 13 * 20 - 20;
+    var y = 10 * 20 - 20;
+    var dx2 = 71 * 20 - 20 ;
+    var dy2 = 39 * 20 - 20;
+
+    // draw path
+    while (_queue.length > 0)
+    {
+      var current = _queue[_queue.length - 1].index
+      // p5.fill("orange");
+      // p5.square((current % Xb) * unit, Math.floor(current / Xb) * unit, unit);
+      Board[current] = 8;
+      _queue.pop()
+    }
+    // drawing squars
+    p5.fill("green");
+    p5.square(x, y, 20);
+    p5.fill("grey");
+    p5.square(dx2, dy2, 20);
+  }
+//
+  const Algo = (p5 : p5Types) => {
+    
+    // white 0; red 2; green 3; brown 4; yellow 8;  black;
+    // init default variables
+      setWalls(p5)
+      var x = 13 * 20 - 20;
+      var y = 10 * 20 - 20;
+      var dx2 = 71 * 20 - 20 ;
+      var dy2 = 39 * 20 - 20;
+      //
+      const unit = 20;
+      // 
+      var Nodes = new Array(Xb * Yb).fill(Node)
+      var _queue = new Array()
+      var _start = Math.round(y / unit) * Xb + Math.round(x / unit)
+      var _end  = Math.round(dy2 / unit) * Xb + Math.round(dx2 / unit)
+      
+      // BFS 
+      var Closed = new Array()
+      var Open = new Array()
+      var _visited = new Array(Xb * Yb).fill(false)
+      var _current = _start
+      
+    // set queue
+      while (_queue.length > 0) _queue.pop()
+      while (Closed.length > 0) Closed.pop()
+ 
+    // step 1
+      while (Open.length > 0) Open.pop()
+      Nodes[_start]  = new Node(y,x,true, _start)
+      Nodes[_start].g = 1
+      Nodes[_start].h = _end - _start
+      Nodes[_start].f = Nodes[_start].g * Nodes[_start].h
+      Open.push(Nodes[_start ])
+      _queue.push(Nodes[_start])
+
+      var Step = 0
+      while (Open.length > 0 && !isFound)
+      {
+        if (Step >= 3)
+        {
+          isFound = true
+          break
+        }
+
+        console.log("Step : " , Step)
+        console.log("Actual Open : " )
+        console.table (Open)
+
+        // step 2
+        if (Open.length <= 0 ) alert("Open is Empty")
+      // step 3
+        var min     = Open[0].f,index = 0
+        for (let i = 0; i < Open.length; i++)
+        {
+          if (Open[i].f < min)
+          {
+            min = Open[i].f
+            index = i
+          }
+        }
+        // remove the smallest element from the open list to the closed list
+        _current = Open[index].index
+        Closed.push(Open[index])
+        Open.slice(index, 1)
+        console.log("min: " , min , "\ncurrent: " , _current, " ")
+        console.log("After Open: " )
+        console.table(Open)
+
+        // for (let i = 0; i < Open.length; i++)
+        // if node is goal then alert found 
+        if (_current === _end)
+        {
+          alert("Found")
+          isFound = true
+        }
+      // step 4
+        // find the neighbors of the current node
+        var  Nq = new Array()
+        let  tmp = new Node(_current - Xb,_current - Xb,false,_current - Xb)
+        let  tmp1 = new Node(_current + 1,_current + 1,false, _current + 1)
+        let  tmp2 = new Node(_current + 1,_current + 1,false, _current + Xb)
+        let  tmp3 = new Node(_current - 1,_current - 1,false, _current - 1)
+        Nq.push(tmp)
+        Nq.push(tmp1)
+        Nq.push(tmp2)
+        Nq.push(tmp3)
+      // step 5
+        for (let i = 0; i < Nq.length; i++)
+        {
+          if (Nq[i].index === _end)
+            alert("END FOUND")
+          if (Nq[i].index >= 0 && Nq[i].index < Xb * Yb && Board[Nq[i].index] !== 4 &&  _visited[Nq[i].index] === false)
+          {
+            var tmpNode = new Node(Nq[i].y, Nq[i].x, true, Nq[i].index)
+            tmpNode.setG((_start - Nq[i].index))
+            tmpNode.setH((_end - Nq[i].index))
+            tmpNode.setf()
+            Open.push(tmpNode)
+            _visited[Nq[i].index] = true
+          }
+        }
+        Step++
+        console.table("Closed", Closed)
+        console.table("---------------------")
+      }
+      // step 6
+      for (let i = 0; i < Closed.length; i++)
+        _queue.push(Closed[i])
+      visualiziation(p5, _queue)
+  }
+  
 
   const handleAction = (p5: p5Types) => {
     if (p5.key === 's' && exp === false)
@@ -237,65 +427,9 @@ export default function Dashboard()
       FindYourPath(state, p5);
       isFound = true;
     }
-    if (p5.key === 'ñ')
+    if (p5.key === 'ñ' || p5.key === ';')
     {
-      // init default variables 
-      var x = 13 * 20 - 20;
-      var y = 10 * 20 - 20;
-      var dx2 = 71 * 20 - 20 ;
-      var dy2 = 39 * 20 - 20;
-      p5.fill("orange");
-      p5.square(x, y, 20);
-      p5.fill("grey");
-      p5.square(dx2, dy2, 20);
-      // walls 
-      for (var i = 0; i < 20; i++)
-        Board[(10 + i) * Xb + 29] = 4;
-
-      // BFS 
-      // white 0; red 2; green 3; brown 4; yellow 8;  black;
-      const unit = 20;
-      const _board = Board
-      var _visited = new Array(Xb * Yb).fill(false)
-      var _queue = new Array()
-      var _queue1 = new Array()
-      var _path = new Array()
-      var _parent = new Array(Xb * Yb).fill(-1)
-      var _start = Math.round(y / unit) * Xb + Math.round(x / unit)
-      var _end = Math.round(dy2 / unit) * Xb + Math.round(dx2 / unit)
-      var _current = _start
-
-      // set queue
-      while (_queue.length > 0) _queue.pop()
-      while (_queue1.length > 0) _queue1.pop()
-      while (_path.length > 0) _path.pop()
-      while (_parent.length > 0) _parent.pop()
-
-      var dis = _end - _start
-      var dir = dis > 0 ? 1 : -1
-      dis = Math.abs(dis)
-    
-      _queue.push(_start)
-      _visited[_start] = true
-
-
-      BFS()
-
-
-      // draw path
-      while (_queue.length > 0)
-      {
-        var current = _queue[_queue.length - 1]
-        // p5.fill("orange");
-        // p5.square((current % Xb) * unit, Math.floor(current / Xb) * unit, unit);
-        Board[current] = 8;
-        _queue.pop()
-      }
-      // drawing squars
-      p5.fill("green");
-      p5.square(x, y, 20);
-      p5.fill("grey");
-      p5.square(dx2, dy2, 20);
+      Algo(p5)
     }
   }
 
@@ -330,80 +464,4 @@ const FindYourPath = (X : Props, p5: p5Types) => {
   let y2 = X.data.sepY;
 
   p5.line(x + 10, y + 10, x2 + 10, y2 + 10);
-}
-
-interface Point {
-  i: number;
-  j: number;
-}
-
-function BFS ()
-{
-
-  // var dx :   = {{1, 1, 1, 0, 0, -1, -1, -ç1}  //Arrays for up, down, right, left movement
-  // var dy : number   = {-1, 0, 1, -1, 1, -1, 0, 1}
-
-// public static void main(String[] args) {
-//       int[][] traverse = {
-//           {1,  2,  3,  4,  5},
-//           {6,  7,  8,  9,  10},
-//           {11, 12, 13, 14, 15},
-//           {16, 17, 18, 19, 20},
-//           {21, 22, 23, 24 ,25}
-//       }; //The array to traverse
-
-//       boolean[][] visited = new boolean[5][5]; //Visited boolean array
-//       Queue<Point> q = new LinkedList<>();
-//       q.add(new Point(2, 2));
-//       visited[2][2] = true; //setting the start cell as visited
-  var Point : Point = {i: 0, j: 0}
-  var dx = [1, 0, -1, 0];
-  var dy = [0, 1, 0, -1];
-  const traverse = [
-    [1,  2,  3, 4 , 5],
-    [6,  7,  8,  9, 10],
-    [11, 12, 13, 14, 15],
-    [16, 17, 18, 19, 20],
-    [21, 22, 23, 24 ,25]
-  ]
-
-  var visited = new Array(5 * 5).fill(false)
-  var q = new Array()
-
-  Point.i = 0;
-  Point.j = 0;
-  q.push(Point)
-  visited[0] = true
-  
-
-  // while (q.length > 0)
-  // {
-  //   let s = q.length
-  //   for (let i = 0; i < s; i++)
-  //   {
-  //     Point = q.shift()
-  //     console.log(traverse[Point.i][Point.j])
-     
-  //     for (let j = 0; j < 4; j++)
-  //     {
-  //       let newi = Point.i + dx[j]
-  //       let newj = Point.j + dy[j]
-        
-  //       if (newi < 0 || newi >= traverse.length || newj < 0 || newj >= traverse[0].length) continue;
-  //       if (visited[newi + newj]) continue;
-        
-  //       q.push({i: newi, j: newj})
-  //       visited[newi + newj] = true
-  //     }
-  //     console.log(" , ")
-  //   }
-  // }
-  // alert("End")
-  // console.log(" End ")
-
-  return (
-    <h1>
-      Hello  Worldasdasdasdaerluighalyejsbgrjkahsebfgjahsbefjh
-    </h1>
-  );
 }
