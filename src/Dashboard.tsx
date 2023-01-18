@@ -2,6 +2,7 @@ import React, {useState} from 'react';
 import Sketch from "react-p5";
 import p5Types from "p5";
 import './Dashboard.css';
+import { NumericLiteral } from 'typescript';
 
 class Node {
   x: number;
@@ -11,6 +12,8 @@ class Node {
   g : number;
   h : number;
   index: number;
+  // parent!: Array<Node>;
+
   // _parent: Node;
   
   constructor(_x : number, _y : number, _visited : boolean, _index : number) {
@@ -43,27 +46,27 @@ class Node {
 
 }
 
-const   width = 1440;
-const   height = 800;
-const   Xb = width / 20;
-const   Yb = height / 20;
-
-
+const UnitGrid = 20
+const   width = 1440
+const   height = 800
+const   Xb = width / UnitGrid
+const   Yb = height / UnitGrid
+const unit = UnitGrid
 var Xpointx = 0
 var Xpointy = 0
-
 var Ypointy = 0
 var Ypointx = 0
-
 export interface Props {
   data: {
-    // name: string;
-    expX: number;
-    expY: number;
-    sepX: number;
-    sepY: number;
+    expX: number
+    expY: number
+    sepX: number
+    sepY: number
   }
 }
+var Query = new Array().fill(0);
+var _queue = new Array()
+let PathFound = false;
 
 export default function Dashboard()
 {
@@ -73,9 +76,7 @@ export default function Dashboard()
   let     Board =  new Array(Xb * Yb).fill(0);
   var     Step = 0
   let  BoardNode = new Array(Xb).fill(new Array(Yb).fill(new Node(0, 0, false, 0)));
-  
   //BoardNode[0][0] = new Node(0, 0, false, 0);
-  
 // 
   // acces with Board[y * Xb + x]
   var state = {
@@ -89,7 +90,7 @@ export default function Dashboard()
       expY: 0,
       sepX: 0,
       sepY: 0
-    }
+    },
   }
   const setup = (p5: p5Types, canvasParentRef: Element) => {
 
@@ -98,10 +99,10 @@ export default function Dashboard()
     p5.frameRate(10);
 		p5.background('#222222')
 
-    for (let i = 0; i < 1400; i+=20) {
+    for (let i = 0; i < 1400; i+=UnitGrid) {
       p5.line(i, 0, i, 1400);
     }
-    for (let i = 0; i < 680; i+=20) {
+    for (let i = 0; i < 680; i+=UnitGrid) {
       p5.line(0, i, 1400, i);
     }
 
@@ -112,9 +113,9 @@ export default function Dashboard()
   const infoBoard = (p5: p5Types) => {
     p5.fill("white");
     if (exp || sep)
-      p5.rect(0, 0, 230, 200);
+      p5.rect(0, 0, 230, 220);
     else 
-      p5.rect(0, 0, 230, 150);
+      p5.rect(0, 0, 230, 180);
     p5.fill("darkblue");
     p5.stroke("darkblue");
     p5.text("Xb : " + Xb + " , Yb :" + Yb , 130,20);
@@ -125,13 +126,14 @@ export default function Dashboard()
     p5.text("Press w : select wall square", 20,100);
     p5.text("Press p : Use Path Finder", 20,120);
     p5.text("Press r : Reset", 20,140);
+    p5.text("Press Q : Remove Walls", 20,160);
     if (sep)
     {
-      p5.text("Y : " + state.data.sepY + ", " + state.data.sepX, 20,170)
+      p5.text("Ygreen : " + state.data.sepY + ", " + state.data.sepX, 20,190)
     }
     if (exp)
     {
-      p5.text("X : " + state.data.expY + ", " + state.data.expX, 20,190)
+      p5.text("Xred   : " + state.data.expY + ", " + state.data.expX, 20,210)
     }
   }
   const drawBoardElements = (p5: p5Types ) => {
@@ -148,14 +150,14 @@ export default function Dashboard()
         {
           p5.fill("red");
           p5.square(i * 20, j * 20, 20);
-          p5.text(" X ", i * 20 + 3, j * 20 + 16);
+          p5.text(" X ", i * UnitGrid+ 3, j * UnitGrid+ 16);
           p5.noFill();
         }
         else if (Board[j * Xb + i] === 3)
         {
           p5.fill("green");
           p5.square(i * 20, j * 20, 20);
-          p5.text(" Y ", i * 20 + 3, j * 20 + 16);
+          p5.text(" Y ", i * UnitGrid+ 3, j * UnitGrid+ 16);
           p5.noFill();
         }
         else if (Board[j * Xb + i] === 4)
@@ -180,17 +182,12 @@ export default function Dashboard()
     if (isFound)
     {
       p5.fill("black");
-      FindYourPath(state, p5);
+      // FindYourPath(Query,state, p5);
     }
     infoBoard(p5);
   }
 //
   const setWalls = (p5: p5Types) => {
-      // init default variables 
-      // var x = 15 * 20 - 20;
-      // var y = 15 * 20 - 20;
-      // var dx2 = 71 * 20 - 20 ;
-      // var dy2 = 39 * 20 - 20;
       var x = Xpointx;
       var y = Xpointy;
       var dx2 = Ypointx;
@@ -200,56 +197,36 @@ export default function Dashboard()
       p5.fill("grey");
       p5.square(dx2, dy2, 20);
       // walls 
-      for (var i = 0; i < 20; i++)
-        Board[(10 + i) * Xb + 29] = 4;
+      // for (var i = 0; i < 20; i++)
+      //   Board[(10 + i) * Xb + 29] = 4;
   }
   const visualiziation = (p5: p5Types, _queue : any) => {
-    // _queue is the path
-    var x = Xpointx;
-    var y = Xpointy;
-    var dx2 = Ypointx;
-    var dy2 = Ypointy;
-    // var x = 15 * 20 - 20;
-    // var y = 15 * 20 - 20;
-    // var dx2 = 71  * 20 - 20 ;
-    // var dy2 = 39  * 20 - 20;
-
+    // FindYourPath(_queue, state, p5)
     // draw path
-    while (_queue.length > 0)
+    for (let i = 0; i < _queue.length ; i++)
     {
-      var current = _queue[_queue.length - 1].index
+      var current = _queue[i].index
       // p5.fill("orange");
       // p5.square((current % Xb) * unit, Math.floor(current / Xb) * unit, unit);
-      Board[current] = 8;
-      _queue.pop()
+      if (Board[current] !== 9 && Board[current] !== 3 && Board[current] !== 2 && Board[current] !== 4)
+          Board[current] = 8;
+      // _queue.pop()
     }
     // drawing squars
     p5.fill("green");
-    p5.square(x, y, 20);
-    p5.fill("grey");
-    p5.square(dx2, dy2, 20);
+    p5.square(Ypointx, Ypointy, 20);
+    p5.fill("red");
+    p5.square(Xpointx, Xpointy, 20);    
   }
 //
   const Algo = (p5 : p5Types) => {
     
     // white 0; red 2; green 3; brown 4; yellow 8;  black;
-    // init default variables
       setWalls(p5)
-      var x = Xpointx;
-      var y = Xpointy;
-      var dx2 = Ypointx;
-      var dy2 = Ypointy;
-      // var x = 15 * 20 - 20;
-      // var y = 15 * 20 - 20;
-      // var dx2 = 71 * 20 - 20 ;
-      // var dy2 = 39 * 20 - 20;
-      //
-      const unit = 20;
       // 
       var Nodes = new Array(Xb * Yb).fill(Node)
-      var _queue = new Array()
-      var _start = Math.round(y / unit) * Xb + Math.round(x / unit)
-      var _end  = Math.round(dy2 / unit) * Xb + Math.round(dx2 / unit)
+      var _start = Math.round(Xpointy / unit) * Xb + Math.round(Xpointx / unit)
+      var _end  = Math.round(Ypointy / unit) * Xb + Math.round(Ypointx / unit)
       
       // BFS 
       var Closed = new Array()
@@ -263,7 +240,7 @@ export default function Dashboard()
  
     // step 1
       while (Open.length > 0) Open.pop()
-      Nodes[_start]  = new Node(y,x,true, _start)
+      Nodes[_start]  = new Node(Xpointy,Xpointx,true, _start)
       Nodes[_start].g = 1
       Nodes[_start].h = _end - _start
       Nodes[_start].f = Nodes[_start].g + Nodes[_start].h
@@ -278,12 +255,9 @@ export default function Dashboard()
           isFound = true
           break
         }
-        // console.log("Step : " , Step)
-        // console.log("Actual Open : ", Open.length ,"\n")
-        // console.table (Open)
 
       // step 2
-        if (Open.length <= 0 ) alert("Open is Empty")
+        if (Open.length <= 0 ) alert("Not found")
       // step 3
         var min     = Open[0].f , index = 0
         for (let i = 0; i < Open.length; i++)
@@ -297,15 +271,12 @@ export default function Dashboard()
         // remove the smallest element from the open list to the closed list
         _current = Open[index].index
         Closed.push(Open[index])
-        // console.log("index removed: " , index , "\n")
         Open.splice(index, 1)
-        // console.log("min: " , min , "\ncurrent: " , _current, " ")
-        // console.log("After Open: ", Open.length ,"\n" )
-        console.table(Open)
+        // console.table(Open)
         // if node is goal then alert found 
         if (_current === _end)
         {
-          // alert("Found 1")
+          alert("found")
           isFound = true
           break
         }
@@ -319,33 +290,30 @@ export default function Dashboard()
 
         if (!(_current % Xb === 0))
           Nq.push(tmp3)
-
         if (!((_current % Xb === 0) && ((_current - 1) % Xb === 0)))
           Nq.push(tmp1)
-
         if (_current > Xb - 1 && _current - Xb > 0) 
           Nq.push(tmp)
-       
         if (_current < Yb * (Xb - 1))
           Nq.push(tmp2)
 
-        console.log("Nq: " , Nq.length)
-        // step 5
+        if (Nq.length <= 0) alert("Not found")
+      // step 5
         for (let i = 0; i < Nq.length; i++)
         {
+          // Open[index].parent.push(Nq[i])
           if (Nq[i].index === _end)
           {
-            // alert("END FOUND")
+            alert("found")
             isFound = true
             break
           }
           if (Nq[i].index >= 0 && Nq[i].index < Xb * Yb && Board[Nq[i].index] !== 4 &&  _visited[Nq[i].index] === false)
           {
             var tmpNode = new Node(Nq[i].y, Nq[i].x, true, Nq[i].index)
-
             const IndexO = Nq[i].index
             var tmpG = Math.abs(IndexO - _start) * 1
-            var tmpH = Math.abs(_end - IndexO) * 1
+            var tmpH = Math.abs(_end - IndexO)   * 1
             //
             var height_start = _start / Xb // 0 - Xb
             var height_end = _end / Xb // 0 - Xb
@@ -358,55 +326,130 @@ export default function Dashboard()
             // var DirH = widthIndexO - width_start 
             var DirH = Math.abs(widthIndexO - width_end) * 1
             var DirV = Math.abs(heightIndexO - height_end) * 1
+            
             var Dh = Math.abs(widthIndexO - width_start) * 1
             var Dv = Math.abs(heightIndexO - height_start) * 1
+
+            // tmpG = Dh * 2 + DirH * 2 + tmpG
+            // tmpH = Dv * 2 + DirV * 2 + tmpH
+
             //
-            tmpG = DirH + Dh * 0
-            tmpH = DirV+ Dv * 0
+            // tmpG = DirH + Dh 
+            // tmpH = DirV + Dv  
             
             // remove garbadge 
             // check when opposite of direction 
             // reformule to be interactif 
+            // fais simulation avec 5x5 grid with step + turns coeffic 
             // --- cover the most rectangulaire space beetwen square and add coeffic to
             // add prents to Nodes
             // --- each cell on Clossed queue to be P = Distance from start + 4 * Turns(change of direction H to V vice versa) 
             // --- then trace path by adding to the sum the min cost from each parent
-            
-            var Dis = _end - IndexO
-            
-            if (Dis)
-            {
-              if ((IndexO % Xb) < (_start % Xb))
-                continue
-            }
-            else
-            {
-              if ((IndexO % Xb) > (_start % Xb))
-                continue
-            } 
-
-
-            console.log( " Nq[i].index : " ,Nq[i].index,"tmpG: " , tmpG , "tmpH: " , tmpH)
-
+      
             tmpNode.setG(tmpG)
             tmpNode.setH(tmpH)
             tmpNode.setf()
-
             Open.push(tmpNode)
           }
           _visited[Nq[i].index] = true
         }
         Step++
-        // console.table("Closed", Closed)
-        console.table("---------------------")
       }
-     
       // step 6
       for (let i = 0; i < Closed.length; i++)
         _queue.push(Closed[i])
       visualiziation(p5, _queue)
   }
+  const FindYourPath = (Q: any, X : Props, p5: p5Types) => {
   
+    p5.line(Xpointx + 10, Xpointy + 10, Ypointx + 10, Ypointy + 10);
+    console.log("Query lenght = " , Q.length);
+    for (let i = 0; i < Q.length; i++)
+      console.log("Query"  , i," [" , Q[i].index, "] -> parents{" , Q[i].lenght ,"} : ");
+
+    // from start to end
+    // define parent and calcul the coeffice of distance and turn 
+    // then trace the path by adding the min cost from each parent
+    // until reach the end
+
+    if (Q[2])
+      Board[Q[2].index] = 9
+    var path = new Array()
+    var _current = Q[0]
+    path.push(_current)
+
+    let s = 0
+    while (Q.lenght > 1)
+    {
+      // s++
+      // if (s > 100)
+      //   break
+
+      var _parents = new Array()
+      for (let i = 0; i < Q.length; i++)
+      {
+        if (isParentOfCurrent(_current.index , Q[i].index))
+        { 
+          _parents.push(Q[i])
+          // alert("parent found")
+        }
+      }
+
+      alert("parents lenght = " + _parents.length)
+      if (_parents.length <= 0)
+      {
+        alert("error no parent found")
+        // break
+      }
+      
+      // find min
+      let _min = _parents[0].f
+      let index = 0
+      for (let i = 0; i < _parents.length; i++)
+      {
+        if (_parents[i].f < _min)
+        {
+          _min = _parents[i].f
+          index = i
+        } 
+      }
+      // alert("found min = " + _min)
+      for (let i = 0; i < Q[i].length; i++)
+      {
+        if (_current.index === Q[i].index)
+          Q.splice(i, 1)
+      }
+      path.push(_parents[index])
+      _current = _parents[index]
+
+      // alert("current = " + _current)
+      // alert("path lenght = " + path.length)
+
+      for (let i = 0; i < Q[i].length; i++)
+      {
+        for (let j = 0; j < _parents.length; j++)
+          if (_parents[j].index === Q[i].index)
+              Q.splice(i, 1)
+      }      
+      if (_current.index === Q[1].index)
+      {
+          PathFound = true
+          alert("end found")
+          break;
+      }
+      // updtae current
+    }
+    alert("path lenght = " + path.length)  
+    for (let i = 0; i < path.length; i++)
+      Board[path[i].index] = 9
+  }
+  
+  const isParentOfCurrent = (current: number, parent: number) => {
+  // alert("current = " + current + " parent = " + parent)
+    if ((current - 1 === parent) || (current + 1 === parent) || (current + Xb === parent) || (current - Xb === parent))
+      return true
+    return false
+  }
 
   const handleAction = (p5: p5Types) => {
     if (p5.key === 's' && exp === false)
@@ -414,7 +457,7 @@ export default function Dashboard()
       p5.fill("red");
       let x = Math.round(p5.mouseX / 20) * 20;
       let y = Math.round(p5.mouseY / 20) * 20;
-      console.log("hello " , x, y);
+      // console.log("hello " , x, y);
       p5.square(x, y, 20)
       if (p5.mouseIsPressed === true && p5.mouseButton === p5.LEFT)
       {
@@ -425,7 +468,6 @@ export default function Dashboard()
         state.data.expX = x;
         state.data.expY = y;
         p5.text("X : " + x + ", " + y, 20,170);
-
         Xpointx = x
         Xpointy = y
       }
@@ -438,7 +480,7 @@ export default function Dashboard()
       let y = Math.round(p5.mouseY / 20) * 20;
       
       
-      console.log("hello " , x, y);
+      // console.log("hello " , x, y);
       p5.square(x, y, 20);
 
       if (p5.mouseIsPressed === true && p5.mouseButton === p5.LEFT)
@@ -467,7 +509,7 @@ export default function Dashboard()
       p5.fill("brown");
       let x = Math.round(p5.mouseX / 20) * 20;
       let y = Math.round(p5.mouseY / 20) * 20;
-      console.log("hello " , x, y);
+      // console.log("hello " , x, y);
       p5.square(x, y, 20);
 
       if (p5.mouseIsPressed === true && p5.mouseButton === p5.LEFT)
@@ -489,33 +531,40 @@ export default function Dashboard()
       exp = false;
       sep = false;
       isFound = false;
+      _queue = []
 
-      for (let i = 0; i < Xb; i++) 
-      {
-        for (let j = 0; j < Yb; j++) 
-          if (Board[j * Xb + i] === 2 || Board[j * Xb + i] === 3 || Board[j * Xb + i] === 4)
-            Board[j * Xb + i] = 0;
-      }
       let curr = 0
       while (curr < Board.length)
       {
-        if (Board[curr] === 8)
+        if (Board[curr] === 8 || Board[curr] === 9 || Board[curr] === 2 || Board[curr] === 3)
           Board[curr] = 0;
           curr++
       }
 
     }
-    if (p5.key === 'p' && exp === true && sep === true && isFound === false)
-    {
-      FindYourPath(state, p5);
-      isFound = true;
-    }
-    if (p5.key === 'ñ' || p5.key === ';')
+    if (p5.key === 'p' && exp && sep && !isFound)
     {
       Algo(p5)
+      // FindYourPath(Query,state, p5);
+      isFound = true;
+    }
+    if (p5.key === 'q')
+    {
+      let curr = 0
+      while (curr < Board.length)
+      {
+        if (Board[curr] === 4)
+          Board[curr] = 0;
+          curr++
+      }
+    }
+    // else if (isFound)
+    //   FindYourPath( Query,state, p5);
+    if (p5.key === 'ñ' || p5.key === ';')
+    {
+
     }
   }
-
   const draw = (p5: p5Types) => {
     drawBoardElements(p5)
     handleAction(p5)
@@ -529,7 +578,6 @@ export default function Dashboard()
     </div>
   )
 }
-
 function VisualizeData(props: Props)
 {
   return (
@@ -538,13 +586,4 @@ function VisualizeData(props: Props)
         <div className='cordX'>X : {props.data.expX} , {props.data.expX}</div>
         <div className='cordY'>Y : {props.data.sepX} , {props.data.sepY}</div>
       </div>);
-}
-const FindYourPath = (X : Props, p5: p5Types) => {
-
-  let x = X.data.expX;
-  let y = X.data.expY;
-  let x2 = X.data.sepX;
-  let y2 = X.data.sepY;
-
-  p5.line(x + 10, y + 10, x2 + 10, y2 + 10);
 }
