@@ -2,6 +2,7 @@ import React, {useState} from 'react';
 import Sketch from "react-p5";
 import p5Types from "p5";
 import './Dashboard.css';
+import { isJSDocReturnTag } from 'typescript';
 
 class Node {
   x: number;
@@ -92,17 +93,19 @@ export default function Dashboard()
   }
   const infoBoard = (p5: p5Types) => {
     p5.fill("white");
-    p5.rect(0, 0, 240, 240);
+    p5.rect(0, 0, 200, 240);
+
     p5.fill("darkblue");
     p5.stroke("darkblue");
-    p5.text("Xb : " + Xb + " , Yb :" + Yb , 145,UnitGrid);
-    p5.text("key pressed : [ " + p5.key + " ]", 20,20);
+    p5.text("Press r : Reset", 20,140);
     p5.text("mouse presse : [" + p5.mouseIsPressed + "]", 20,40);
+    p5.text("/ Xb : " + Xb , 145,20);
+    p5.text("/ Yb : " + Yb , 145, 40)
+    p5.text("key pressed : [ " + p5.key + " ]", 20,20);
     p5.text("Press s : select first square", 20,60);
     p5.text("Press e : select second square", 20,80);
     p5.text("Press w : select wall square", 20,100);
     p5.text("Press p : Use Path Finder", 20,120);
-    p5.text("Press r : Reset", 20,140);
     p5.text("Press Q : Remove Walls", 20,160);
     if (sep)
     {
@@ -127,6 +130,11 @@ export default function Dashboard()
           p5.square(i * UnitGrid, j * UnitGrid, UnitGrid);
           p5.noFill();
         }
+        else if (Board[j * Xb + i] === 1){
+          p5.fill("black");
+          p5.square(i * UnitGrid, j * UnitGrid, UnitGrid);
+          p5.noFill();
+        }
         else if (Board[j * Xb + i] === 2)
         {
           p5.fill("red");
@@ -147,9 +155,21 @@ export default function Dashboard()
           p5.square(i * UnitGrid, j * UnitGrid, UnitGrid);
           p5.noFill();
         }
+        else if (Board[j * Xb + i] === 5)
+        {
+          p5.fill("#0c9d0e20");
+          p5.square(i * UnitGrid, j * UnitGrid, UnitGrid);
+          p5.noFill();
+        }
         else if (Board[j * Xb + i] === 8)
         {
-          p5.fill("orange");
+          p5.fill("#d4a6747c");
+          p5.square(i * UnitGrid, j * UnitGrid, UnitGrid);
+          p5.noFill();
+        }
+        else if (Board[j * Xb + i] === 9)
+        {
+          p5.fill("#750f8520");
           p5.square(i * UnitGrid, j * UnitGrid, UnitGrid);
           p5.noFill();
         }
@@ -167,28 +187,84 @@ export default function Dashboard()
     infoBoard(p5);
   }
   const visualiziation = (p5: p5Types, _queue : any, path : any) => {
-    // FindYourPath(_queue, state, p5)
+    // trace path
+
+    var chemin = _queue
+    var begin = chemin[1].index
+    var last = chemin[chemin.length - 1].index
+      
+      var _point = chemin[1].index
+      Board[_point] = 9
+
+      console.log("first child index ", chemin[1].index , " , ", _point + 1)
+
+      var save = 2
+      for (let j = 0; j < 1 ; j++)
+      {
+        if (_point === last)
+          break
+        var parent_number = 0
+        for (let i = 2; i < chemin.length ; i++)
+        {
+          // console.log(" child " , i, " :", chemin[i].index, " point :",  _point + 1 , " " , _point - 1 , " " ,_point - Xb, " " , _point + Xb)
+          if (chemin[i].index === _point + 1 || chemin[i].index === _point - 1 || chemin[i].index === _point + Xb || chemin[i].index === _point - Xb)
+          {
+            Board[chemin[i].index] = 9
+            _point = chemin[i].index
+            chemin.splice(i, 1)
+            save = i
+            parent_number++
+            console.log("found parent",  parent_number," index ", chemin[i].index )
+            // break
+          }
+          // if (parent_number >= 1)
+          //   break
+
+
+        }
+        console.log("number of child found = " , parent_number)
+      }
+
+      //   while ()
+      //   {
+      //     if ()
+      //     console.log(" child 2 :", _point, " : ",  _point + 1 , " " , _point - 1 , " " ,_point - Xb, " " , _point + Xb)
+          
+      //     for (let i = 2; i < _queue.length ; i++)
+      //     {
+      //       console.log(" index :", _queue[i].index, " point :",  _point + 1 , " " , _point - 1 , " " ,_point - Xb, " " , _point + Xb)
+      //       if (_queue[i].index === _point + 1 || _queue[i].index === _point - 1 || _queue[i].index === _point + Xb || _queue[i].index === _point - Xb)
+      //       {
+      //         Board[_queue[i].index] = 9
+      //         console.log("found parent index ", _queue[i].index )
+      //         break
+      //       }
+      //     }
+      // }
+
+
+
+
     // draw path
+    alert("visualiziation  Q : " + _queue.length + " P : " + path.length);
     for (let i = 0; i < _queue.length ; i++)
     {
       var current = _queue[i].index
       // p5.fill("orange");
       // p5.square((current % Xb) * unit, Math.floor(current / Xb) * unit, unit);
-      if (Board[current] !== 9 && Board[current] !== 3 && Board[current] !== 2 && Board[current] !== 4)
+      if (Board[current] !== 9 && Board[current] !== 3 && Board[current] !== 2 && Board[current] !== 4 && Board[current] !== 1)
           Board[current] = 8;
-      // _queue.pop()
     }
-    for (let i = 0; i < path.length ; i++)
-    {
-      var current = path[i].index
-      if (Board[current] !== 3 && Board[current] !== 2 && Board[current] !== 4)
-          Board[current] = 9;
-    }
-    // drawing squars
+    // for (let i = 0; i < path.length ; i++)
+    // {
+    //   var current = path[i].index
+    //   if (Board[current] !== 3 && Board[current] !== 2 && Board[current] !== 4 &&  Board[current] !== 1)
+    //       Board[current] = 9;
+    // }
     p5.fill("green");
-    p5.square(Ypointx, Ypointy, 20);
+    p5.square(Ypointx, Ypointy, UnitGrid);
     p5.fill("red");
-    p5.square(Xpointx, Xpointy, 20);    
+    p5.square(Xpointx, Xpointy, UnitGrid);    
   }
 //
   const Algo = (p5 : p5Types) => {
@@ -219,12 +295,6 @@ export default function Dashboard()
 
       while (Open.length > 0 && !isFound)
       {
-        // 1000
-        if (Step >= 1000 && false)
-        {
-          isFound = true
-          break
-        }
       // step 2
         if (Open.length <= 0 ) alert("Not found")
       // step 3
@@ -268,6 +338,7 @@ export default function Dashboard()
           Nq.push(tmp2)
         if (Nq.length <= 0) alert("Not found")
       // step 5
+        var selecteN = new Array()
         for (let i = 0; i < Nq.length; i++)
         {
           if (Nq[i].index === _end)
@@ -297,34 +368,38 @@ export default function Dashboard()
             //
             var tmpG = Math.abs(IndexO - _start) * 1
             var tmpH = Math.abs(_end - IndexO) * 1
-            //
-            // var DirH = widthIndexO - width_start 
-            var DirH = Math.abs(widthIndexO - width_end) * 1 
-            var DirV = Math.abs(heightIndexO - height_end) * 1
-            var Dh  = Math.abs(widthIndexO - width_start) * 1
-            var Dv = Math.abs(heightIndexO - height_start) * 1
-            // calcul Turn
-            var Sym = 0
-            // var SymetricH =  (heightPreviousCurrent === heightCurrent && heightCurrent ===  heightIndexO ) ? true : false
-            // var SymetricV =  (widthPreviousCurrent === widthCurrent && widthCurrent === widthIndexO ) ? true : false
-            // if (!SymetricH && !SymetricV)
-            // {
-            //   Sym =  10 * UnitGrid
-            // }
-            tmpG = DirH +  Dh + Sym
-            tmpH = DirV +  Dv  + Sym
+
+            tmpG = DirH +  Dh 
+            tmpH = DirV +  Dv 
+
             tmpNode.setG(tmpG)
             tmpNode.setH(tmpH)
             tmpNode.setf()
+            selecteN.push(tmpNode)
             Open.push(tmpNode)
+
           }
           _visited[Nq[i].index] = true
         }
+        if (selecteN.length >= 0)
+          continue
+        var minf =  selecteN[0].f
+        var minidex = 0
+        for (let i = 0 ; i < selecteN.length; i++)
+        {
+          if (minf > selecteN[i].f )
+           {
+            minf =  selecteN[i].f 
+            minidex = i
+           } 
+        }
+
         Step++
       }
       // step 6
       for (let i = 0; i < Closed.length; i++)
         _queue.push(Closed[i])
+      alert("Queu Lenght " + _queue.length )
       // // trace Path
       var path = new Array()
       for (let i = 0; i < 20; i++)
@@ -337,8 +412,10 @@ export default function Dashboard()
       p5.fill("red");
       let x = Math.round(p5.mouseX / UnitGrid) * UnitGrid;
       let y = Math.round(p5.mouseY / UnitGrid) * UnitGrid;
-      p5.square(x, y, UnitGrid)
-      if (p5.mouseIsPressed === true && p5.mouseButton === p5.LEFT)
+      if (Board[Math.round(y / UnitGrid) * Xb + Math.round(x / UnitGrid)] !== 1)
+        p5.square(x, y, UnitGrid)
+
+      if (p5.mouseIsPressed === true && p5.mouseButton === p5.LEFT && Board[Math.round(y / UnitGrid) * Xb + Math.round(x / UnitGrid)] !== 1)
       {
         p5.fill("yellow");
         p5.square(x, y, UnitGrid);
@@ -356,8 +433,9 @@ export default function Dashboard()
       p5.fill("green");
       let x = Math.round(p5.mouseX / UnitGrid) * UnitGrid;
       let y = Math.round(p5.mouseY / UnitGrid) * UnitGrid;
-      p5.square(x, y, UnitGrid);
-      if (p5.mouseIsPressed === true && p5.mouseButton === p5.LEFT)
+      if (Board[Math.round(y / UnitGrid) * Xb + Math.round(x / UnitGrid)] !== 1)
+          p5.square(x, y, UnitGrid);
+      if (p5.mouseIsPressed === true && p5.mouseButton === p5.LEFT && Board[Math.round(y / UnitGrid) * Xb + Math.round(x / UnitGrid)] !== 1)
       {
         p5.fill("yellow");
         p5.square(x, y, UnitGrid);
@@ -375,8 +453,9 @@ export default function Dashboard()
       p5.fill("brown");
       let x = Math.round(p5.mouseX / UnitGrid) * UnitGrid;
       let y = Math.round(p5.mouseY / UnitGrid) * UnitGrid;
-      p5.square(x, y, UnitGrid);
-      if (p5.mouseIsPressed === true && p5.mouseButton === p5.LEFT)
+      if (Board[Math.round(y / UnitGrid) * Xb + Math.round(x / UnitGrid)] !== 1)
+        p5.square(x, y, UnitGrid);
+      if (p5.mouseIsPressed === true && p5.mouseButton === p5.LEFT && Board[Math.round(y / UnitGrid) * Xb + Math.round(x / UnitGrid)] !== 1)
       {
         p5.fill("yellow");
         p5.square(x, y, UnitGrid);
