@@ -2,7 +2,6 @@ import React, {useState} from 'react';
 import Sketch from "react-p5";
 import p5Types from "p5";
 import './Dashboard.css';
-import { NumericLiteral } from 'typescript';
 
 class Node {
   x: number;
@@ -13,7 +12,6 @@ class Node {
   h : number;
   index: number;
   parent: any
-  // parent!: Array<Node>;
   constructor(_x : number, _y : number, _visited : boolean, _index : number) {
     this.x = _x;
     this.y = _y;
@@ -22,14 +20,12 @@ class Node {
     this.f = 0;
     this.g = 0;
     this.h = 0;
-    // this._parent = new Node(0, 0, false, 0);
 ;  }
   setF(f : number) {  this.f = f; }
   setf() {  this.f = Math.abs(this.g + this.h) }
   setG(g : number) {  this.g = g; }
   setH(h : number) {  this.h = h; }
   setVisited(visited : boolean) {  this.visited = visited; }
-  // setParent(parent : Node) {  this._parent = parent; }
 }
 // Board Data
 const UnitGrid = 40
@@ -50,9 +46,7 @@ export interface Props {
     sepY: number
   }
 }
-var Query = new Array().fill(0);
 var _queue = new Array()
-let PathFound = false;
 
 export default function Dashboard()
 {
@@ -61,9 +55,6 @@ export default function Dashboard()
   var     isFound = false;
   let     Board =  new Array(Xb * Yb).fill(0);
   var     Step = 0
-  let     BoardNode = new Array(Xb).fill(new Array(Yb).fill(new Node(0, 0, false, 0)));
-  //BoardNode[0][0] = new Node(0, 0, false, 0);
-// 
   // acces with Board[y * Xb + x]
   var      state = {
     board:{
@@ -79,7 +70,6 @@ export default function Dashboard()
     },
   }
   const setup = (p5: p5Types, canvasParentRef: Element) => {
-
 		p5.createCanvas(width, height).parent(canvasParentRef);
     p5.stroke(50); // Set line drawing color to white
     p5.frameRate(10);
@@ -124,6 +114,10 @@ export default function Dashboard()
     }
   }
   const drawBoardElements = (p5: p5Types ) => {
+    for (let i = 0; i < Xb * Yb; i++) {
+      if (i % Xb == 0 || i < Xb || i > Xb * (Yb - 1) || i % Xb == Xb - 1)
+        Board[i] = 1;
+    }
     for (let i = 0; i < Xb; i++) 
       for (let j = 0; j < Yb; j++) 
       {
@@ -172,20 +166,6 @@ export default function Dashboard()
     }
     infoBoard(p5);
   }
-//
-  const setWalls = (p5: p5Types) => {
-      var x = Xpointx;
-      var y = Xpointy;
-      var dx2 = Ypointx;
-      var dy2 = Ypointy;
-      p5.fill("orange");
-      p5.square(x, y, 20);
-      p5.fill("grey");
-      p5.square(dx2, dy2, 20);
-      // walls 
-      // for (var i = 0; i < 20; i++)
-      //   Board[(10 + i) * Xb + 29] = 4;
-  }
   const visualiziation = (p5: p5Types, _queue : any, path : any) => {
     // FindYourPath(_queue, state, p5)
     // draw path
@@ -213,7 +193,6 @@ export default function Dashboard()
 //
   const Algo = (p5 : p5Types) => {
     // white 0; red 2; green 3; brown 4; yellow 8;  black;
-      setWalls(p5)
       // 
       var Nodes = new Array(Xb * Yb).fill(Node)
       var _start = Math.round(Xpointy / UnitGrid) * Xb + Math.round(Xpointx / UnitGrid)
@@ -246,7 +225,6 @@ export default function Dashboard()
           isFound = true
           break
         }
-
       // step 2
         if (Open.length <= 0 ) alert("Not found")
       // step 3
@@ -265,8 +243,6 @@ export default function Dashboard()
         _current = Open[index].index
         Closed.push(Open[index])
         Open.splice(index, 1)
-
-        // console.table(Open)
         // if node is goal then alert found 
         if (_current === _end)
         {
@@ -290,21 +266,10 @@ export default function Dashboard()
           Nq.push(tmp)
         if (_current < Yb * (Xb - 1))
           Nq.push(tmp2)
-
         if (Nq.length <= 0) alert("Not found")
       // step 5
-        var PreviousCurrent = Closed[Closed.length - 1]
-        var Current =  _current
-        //
-        var heightPreviousCurrent = PreviousCurrent / Xb // 0 - Xb
-        var heightCurrent = Current / Xb // 0 - Xb
-        //
-        var widthPreviousCurrent = PreviousCurrent / Xb // 0 - Xb
-        var widthCurrent = Current % Xb  // 0 - Yb
-
         for (let i = 0; i < Nq.length; i++)
         {
-          // Open[index].parent.push(Nq[i])
           if (Nq[i].index === _end)
           {
             alert("found")
@@ -333,69 +298,26 @@ export default function Dashboard()
             var tmpG = Math.abs(IndexO - _start) * 1
             var tmpH = Math.abs(_end - IndexO) * 1
             //
-            var height_start = _start / Xb // 0 - Xb
-            var height_end = _end / Xb// 0 - Xb
-            var heightIndexO = IndexO / Xb // 0 - Xb
-            //
-            var width_start = _start % Xb  // 0 - Yb
-            var width_end = _end % Xb  // 0 - Yb
-            var widthIndexO = IndexO % Xb  // 0 - Yb
-            //
             // var DirH = widthIndexO - width_start 
             var DirH = Math.abs(widthIndexO - width_end) * 1 
             var DirV = Math.abs(heightIndexO - height_end) * 1
             var Dh  = Math.abs(widthIndexO - width_start) * 1
             var Dv = Math.abs(heightIndexO - height_start) * 1
-
             // calcul Turn
             var Sym = 0
-            var SymetricH =  (heightPreviousCurrent === heightCurrent && heightCurrent ===  heightIndexO ) ? true : false
-            var SymetricV =  (widthPreviousCurrent === widthCurrent && widthCurrent === widthIndexO ) ? true : false
-            if (!SymetricH && !SymetricV)
-            {
-              Sym =  10 * UnitGrid
-            }
+            // var SymetricH =  (heightPreviousCurrent === heightCurrent && heightCurrent ===  heightIndexO ) ? true : false
+            // var SymetricV =  (widthPreviousCurrent === widthCurrent && widthCurrent === widthIndexO ) ? true : false
+            // if (!SymetricH && !SymetricV)
+            // {
+            //   Sym =  10 * UnitGrid
+            // }
             tmpG = DirH +  Dh + Sym
             tmpH = DirV +  Dv  + Sym
-            // var tmpG = Dh   + Dv 
-            // var tmpH = DirH + DirV + Sym
-            //
-
-            // var Dis = _end - IndexO
-
-            // if (Dis)
-            // {
-            //   if ((IndexO % Xb) < (_start % Xb))
-            //     continue
-            // }
-            // else
-            // {
-            //   if ((IndexO % Xb) > (_start % Xb))
-            //     continue
-            // } 
-
-            // add Turn C oeffi
-
-            // tmpG = Dh * 2 + DirH * 2 + tmpG
-            // tmpH = Dv * 2 + DirV * 2 + tmpH
-            
-            // remove garbadge 
-            // check when opposite of direction 
-            // reformule to be interactif 
-            // fais simulation avec 5x5 grid with step + turns coeffic 
-            // --- cover the most rectangulaire space beetwen square and add coeffic to
-            // add prents to Nodes
-            // --- each cell on Clossed queue to be P = Distance from start + 4 * Turns(change of direction H to V vice versa) 
-            // --- then trace path by adding to the sum the min cost from each parent
-            // tmpNode.parent.push(_current)
             tmpNode.setG(tmpG)
             tmpNode.setH(tmpH)
             tmpNode.setf()
             Open.push(tmpNode)
           }
-
-          // push the closet node of neighbeur Nq queue
-
           _visited[Nq[i].index] = true
         }
         Step++
@@ -403,18 +325,10 @@ export default function Dashboard()
       // step 6
       for (let i = 0; i < Closed.length; i++)
         _queue.push(Closed[i])
-
       // // trace Path
-      // // var checkPoint = Closed[0]
-      // // Closed.splice(0,1)
-      // // alert(checkPoint.index)
       var path = new Array()
-
       for (let i = 0; i < 20; i++)
         path.push(Closed[i])
-      // path = _queue
-      // 
-     
       visualiziation(p5, _queue, path)
   }
   const handleAction = (p5: p5Types) => {
@@ -423,7 +337,6 @@ export default function Dashboard()
       p5.fill("red");
       let x = Math.round(p5.mouseX / UnitGrid) * UnitGrid;
       let y = Math.round(p5.mouseY / UnitGrid) * UnitGrid;
-      // console.log("hello " , x, y);
       p5.square(x, y, UnitGrid)
       if (p5.mouseIsPressed === true && p5.mouseButton === p5.LEFT)
       {
@@ -440,15 +353,10 @@ export default function Dashboard()
     }
     if (p5.key === 'e' && sep === false)
     {
-
       p5.fill("green");
       let x = Math.round(p5.mouseX / UnitGrid) * UnitGrid;
       let y = Math.round(p5.mouseY / UnitGrid) * UnitGrid;
-      
-      
-      // console.log("hello " , x, y);
       p5.square(x, y, UnitGrid);
-
       if (p5.mouseIsPressed === true && p5.mouseButton === p5.LEFT)
       {
         p5.fill("yellow");
@@ -458,16 +366,8 @@ export default function Dashboard()
         state.data.sepX = x;
         state.data.sepY = y;
         p5.text("Y : " + x + ", " + y, UnitGrid,190);
-
         Ypointx = x
         Ypointy = y
-        // setstate({
-        //   data :  {  
-        //     expX: x,
-        //     expY: y,
-        //     sepX: state.data.sepX,
-        //     sepY: state.data.sepY,
-        //   }})
       }
     }
     if (p5.key === 'w')
@@ -475,20 +375,13 @@ export default function Dashboard()
       p5.fill("brown");
       let x = Math.round(p5.mouseX / UnitGrid) * UnitGrid;
       let y = Math.round(p5.mouseY / UnitGrid) * UnitGrid;
-      // console.log("hello " , x, y);
       p5.square(x, y, UnitGrid);
-
       if (p5.mouseIsPressed === true && p5.mouseButton === p5.LEFT)
       {
         p5.fill("yellow");
         p5.square(x, y, UnitGrid);
-
-        // if (Board[Math.round(y / UnitGrid) * Xb + Math.round(x / UnitGrid)] == 4)
-        //   Board[Math.round(y / UnitGrid) * Xb + Math.round(x / UnitGrid)] = 0;
-        // else
-          Board[Math.round(y / UnitGrid) * Xb + Math.round(x / UnitGrid)] = 4;
-
-          sep = true;
+        Board[Math.round(y / UnitGrid) * Xb + Math.round(x / UnitGrid)] = 4;
+        sep = true;
       }
    
     }
@@ -498,7 +391,6 @@ export default function Dashboard()
       sep = false;
       isFound = false;
       _queue = []
-
       let curr = 0
       while (curr < Board.length)
       {
@@ -506,7 +398,6 @@ export default function Dashboard()
           Board[curr] = 0;
           curr++
       }
-
     }
     if (p5.key === 'p' && exp && sep && !isFound)
     {
@@ -525,7 +416,6 @@ export default function Dashboard()
     }
     if (p5.key === 'ñ' || p5.key === ';')
     {
-
     }
   }
   const draw = (p5: p5Types) => {
@@ -535,18 +425,6 @@ export default function Dashboard()
   return(
     <div className='board'>
       <Sketch setup={setup} draw={draw} />
-      {/* <VisualizeData data={state.data}/> */}
-      {/* <div className='cordX'>X : {state.data.expX} , {state.data.expX}</div>
-      <div className='cordY'>Y : {state.data.sepX} , {state.data.sepY}</div> */}
     </div>
   )
-}
-function VisualizeData(props: Props)
-{
-  return (
-    <div className='board__info'>
-        <div>Dashboard Infos</div>
-        <div className='cordX'>X : {props.data.expX} , {props.data.expX}</div>
-        <div className='cordY'>Y : {props.data.sepX} , {props.data.sepY}</div>
-      </div>);
 }
