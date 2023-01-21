@@ -1,7 +1,7 @@
-# Path Finding Visualizer
+# Path Finding Visualizer using A* algorithm
 Path Finding Visualizer is a web-based application that uses the A* algorithm to find the shortest path with least turns between two points on a grid. The app visualizes the process by animating the algorithm as it searches for the optimal path, allowing users to understand how the A* algorithm works. Users can also interact with the app by adjusting the grid size, placing obstacles on the grid and adjusting the heuristic value to see the impact on the algorithm's performance. 
 
-### `npm start`
+### `npm install`
 to install all the dependencies
 ### `npm start`
 Runs the app in the development mode.\
@@ -32,11 +32,11 @@ You will also see any lint errors in the console.
 
 ### `Demo`
 
-![MarineGEO circle logo](/demos/demo.png.png "Demo logo")
-![MarineGEO circle logo](/demos/demo1.png.png "Demo logo")
-![MarineGEO circle logo](/demos/demo2.png.png "Demo logo")
-![MarineGEO circle logo](/demos/demo4.png.png "Demo logo")
-![MarineGEO circle logo](/demos/result4.png.png "Demo logo")
-![MarineGEO circle logo](/demos/demo5.png.png "Demo logo")
-![MarineGEO circle logo](/demos/result5.png.png "Demo logo")
+![MarineGEO circle logo1](/demos/demo.png.png "Demo logo")
+![MarineGEO circle logo2](/demos/demo1.png.png "Demo logo")
+![MarineGEO circle logo3](/demos/demo2.png.png "Demo logo")
+![MarineGEO circle log4](/demos/demo4.png.png "Demo logo")
+![MarineGEO circle log5](/demos/result4.png.png "Demo logo")
+![MarineGEO circle logo6](/demos/demo5.png.png "Demo logo")
+![MarineGEO circle logo7](/demos/result5.png.png "Demo logo")
 
