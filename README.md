@@ -32,11 +32,8 @@ You will also see any lint errors in the console.
 
 ### `Demo`
 
-![MarineGEO circle logo1](/demos/demo.png "Demo1 logo")
-![MarineGEO circle logo2](/demos/demo1.png "Demo2 logo")
-![MarineGEO circle logo3](/demos/demo2.png "Demo3 logo")
-![MarineGEO circle log4](/demos/demo4.png "Demo5 logo")
-![MarineGEO circle log5](/demos/result4.png "Demo8 logo")
-![MarineGEO circle logo6](/demos/demo5.png "Demo8 logo")
-![MarineGEO circle logo7](/demos/result5.png "Demo8 logo")
+![MarineGEO circle logo2](/demos/demo1.png "Demo2 logo")    ![MarineGEO circle logo3](/demos/demo2.png "Demo3 logo")
+![MarineGEO circle logo2](/demos/demo3.png "Demo2 logo")    ![MarineGEO circle logo3](/demos/demo4.png "Demo3 logo")
+![MarineGEO circle log4](/demos/demo4.png "Demo5 logo")     ![MarineGEO circle log5](/demos/result4.png "Demo8 logo")
+![MarineGEO circle logo6](/demos/demo5.png "Demo8 logo")    ![MarineGEO circle logo7](/demos/result5.png "Demo8 logo")
 
