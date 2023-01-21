@@ -158,9 +158,12 @@ export default function Dashboard()
       }
     }
     if (isFound)
-         p5.line(StartPoint.x * UnitGrid + UnitGrid / 2, StartPoint.y * UnitGrid + UnitGrid / 2, EndPoint.x * UnitGrid + UnitGrid / 2, EndPoint.y * UnitGrid + UnitGrid / 2)
+       BackTracePath(p5)
     // End Drawing Board
-    infoBoard(p5);
+    infoBoard(p5)
+    // ArrowSquares(p5, 10,10, 11, 10)
+    // ArrowSquares(p5, 11,10, 11, 9)
+
   }
   const handleAction = (p5: p5Types) => {
     var ypoint = 0
@@ -386,6 +389,36 @@ export default function Dashboard()
       _queue.push(Closed[i])
     visualiziation(p5, _queue)
   }
+  const ArrowSquares = (p5 : p5Types,x : number  , y : number, x1: number, y1 : number) => {
+    p5.strokeWeight(4);
+    p5.line(x * UnitGrid + UnitGrid / 2, y * UnitGrid + UnitGrid / 2, x1 * UnitGrid + UnitGrid / 2, y1 * UnitGrid + UnitGrid / 2)
+    p5.strokeWeight(1);
+  }
+
+  const BackTracePath = (p5: p5Types) => {
+    // PATH TRACING BY PARENTING
+    var current 
+    if (isFound)
+    {
+      current = _queue[_queue.length - 1]
+      ArrowSquares(p5, current.x, current.y, EndPoint.x, EndPoint.y)
+
+      var dis = 0
+      for (let i = 0; dis < _queue.length ; i++)
+      {
+        dis++
+        BoardElement[current.y][current.x] = 9;
+        ArrowSquares(p5, current.x, current.y, current.parent.x, current.parent.y)
+        current = current.parent
+        if (current === undefined || (BoardElement[current.y][current.x] === 2 ))
+          break
+     
+      }
+
+      // eslint-disable-next-line 
+      // alert("---- Target Found ----- \nPath distance : " + dis + " unit \n" +"Shortest dist  : " + Math.round(Distance(StartPoint.x, StartPoint.y, EndPoint.x , EndPoint.y)) + " unit " )
+    } 
+  }
   const visualiziation = (p5: p5Types, _queue : any) => {
   var current
   for (let i = 0; i < _queue.length ; i++)
@@ -397,23 +430,12 @@ export default function Dashboard()
     }
   }
   // PATH TRACING BY PARENTING  
-  if (isFound)
-  {
-    current = _queue[_queue.length - 1]
-    var dis = 0
-    for (let i = 0; dis < _queue.length ; i++)
-    {
-      dis++
-      BoardElement[current.y][current.x] = 9;
-      current = current.parent
-      if (current === undefined || (BoardElement[current.y][current.x] === 2) )
-        break
-    }
-    // eslint-disable-next-line 
-    alert("---- Target Found ----- \nPath distance : " + dis + " unit \n" +"Shortest dist  : " + Math.round(Distance(StartPoint.x, StartPoint.y, EndPoint.x , EndPoint.y)) + " unit " )
-  }
-    p5.fill("red");
-    p5.square(EndPoint.x, EndPoint.y, UnitGrid);    
+  BackTracePath(p5)   
+  p5.fill("red");
+  p5.square(EndPoint.x, EndPoint.y, UnitGrid);   
+
+
+  
   }
   const draw = (p5: p5Types) => {
     drawBoardElements(p5)
