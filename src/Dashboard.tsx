@@ -37,7 +37,7 @@ var     EndPoint = new Node(0, 0, false, 0)
 var     exp = false;
 var     sep = false;
 var     walls = 0
-// eslint-disable-next-line
+//      eslint-disable-next-line
 var     _queue = new Array()
 var     isFound = false;
 
@@ -303,7 +303,7 @@ export default function Dashboard()
     // step 2
       if (Open.length <= 0 ) 
       {
-        alert("Y Square Not found")
+        // alert("Y Square Not found")
         isFound = false
         break
       }
@@ -316,7 +316,7 @@ export default function Dashboard()
         {
           if (current.x === end.x && current.y === end.y)
           {
-            alert("End Square Found")
+            // alert("End Square Found")
             isFound = true
             break
           }
@@ -331,7 +331,7 @@ export default function Dashboard()
       Open.splice(index, 1)
       if (current.x === end.x && current.y === end.y)
       {
-        alert("End Square Found")
+        // alert("End Square Found")
         isFound = true
         break
       }
@@ -357,7 +357,7 @@ export default function Dashboard()
       {
         if (Nq[i].x === end.x &&  Nq[i].y === end.y)
         {
-          alert("End Square Found")
+          // alert("End Square Found")
           isFound = true
           Open.push(Nq[i])
           // Closed.push(Nq[i])
@@ -401,7 +401,7 @@ export default function Dashboard()
   {
     current = _queue[_queue.length - 1]
     var dis = 0
-    for (let i = 0; i < 100 ; i++)
+    for (let i = 0; dis < _queue.length ; i++)
     {
       dis++
       BoardElement[current.y][current.x] = 9;
@@ -410,7 +410,7 @@ export default function Dashboard()
         break
     }
     // eslint-disable-next-line 
-    alert("Path distance : " + dis + " unit \n" +"Shortest dist  : " + Math.round(Distance(StartPoint.x, StartPoint.y, EndPoint.x , EndPoint.y)) + " unit " )
+    alert("---- Target Found ----- \nPath distance : " + dis + " unit \n" +"Shortest dist  : " + Math.round(Distance(StartPoint.x, StartPoint.y, EndPoint.x , EndPoint.y)) + " unit " )
   }
     p5.fill("red");
     p5.square(EndPoint.x, EndPoint.y, UnitGrid);    
