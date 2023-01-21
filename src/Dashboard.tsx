@@ -26,15 +26,21 @@ class Node {
   setH(h : number) {  this.h = h; }
   setVisited(visited : boolean) {  this.visited = visited; }
 }
-const UnitGrid = 40
+
+const     UnitGrid = 40
 const   width = 1440
 const   height = 800
 const   Xb = width / UnitGrid
 const   Yb = height / UnitGrid
-var Xpointx = 0
-var Xpointy = 0
-var Ypointy = 0
-var Ypointx = 0
+var     StartPoint = new Node(0, 0, false, 0)
+var     EndPoint = new Node(0, 0, false, 0)
+var     exp = false;
+var     sep = false;
+var     walls = 0
+// eslint-disable-next-line
+var     _queue = new Array()
+var     isFound = false;
+
 export interface Props {
   data: {
     expX: number
@@ -43,46 +49,41 @@ export interface Props {
     sepY: number
   }
 }
-// eslint-disable-next-line
-var _queue = new Array()
 
 export default function Dashboard()
 {
-  var     exp = false;
-  var     sep = false;
-  var     isFound = false;
-  let     Board =  new Array(Xb * Yb).fill(0);
-  var     state = {
-    board:{
-      Xb: Xb,
-      Yb: Yb,
-      Board: Board
-    },
-    data :  {  
-      expX: 0,
-      expY: 0,
-      sepX: 0,
-      sepY: 0
-    },
+  // Board Elemenets
+  let     BoardElement =  [] as any;
+  for (let i = 0; i < Yb; i++)  BoardElement[i] = new Array(Xb).fill(0);
+  // Set Border Board
+  for (let i = 0; i < Yb; i++)
+    {
+      for (let j = 0; j < Xb; j++)
+      {
+        if (i === 0 || i === Yb - 1 || j === 0 || j === Xb - 1) 
+          BoardElement[i][j] = 1;
+        else 
+          BoardElement[i][j] = 0;
+      }
+  }
+  // Board Functions
+  const SetBoarder = (p5: p5Types) => {
+    // Draw lines 
+    for (let i = 0; i < width; i+=UnitGrid) {
+      p5.line(i, 0, i, height);
+    }
+    for (let i = 0; i < height; i+=UnitGrid) {
+      p5.line(0, i, width, i);
+    }
   }
   const setup = (p5: p5Types, canvasParentRef: Element) => {
-		p5.createCanvas(width, height).parent(canvasParentRef);
-    p5.stroke(50); // Set line drawing color to white
+		// Init Board
+    p5.createCanvas(width, height).parent(canvasParentRef);
+    p5.stroke(50); 
     p5.frameRate(10);
 		p5.background('#222222')
-    for (let i = 0; i < 1400; i+=UnitGrid) {
-      p5.line(i, 0, i, 1400);
-    }
-    for (let i = 0; i < 680; i+=UnitGrid) {
-      p5.line(0, i, 1400, i);
-    }
-    state.board.Board = Board;
-    state.board.Xb = Xb;
-    state.board.Yb = Yb;
-    for (let i = 0; i < Xb * Yb; i++) {
-      if (i % Xb === 0 || i < Xb || i > Xb * (Yb - 1) || i % Xb === Xb - 1)
-        Board[i] = 1;
-    }
+    SetBoarder(p5)
+    drawBoardElements(p5)
   }
   const infoBoard = (p5: p5Types) => {
     p5.fill("white");
@@ -100,261 +101,137 @@ export default function Dashboard()
     p5.text("Press p : Use Path Finder", 20,120);
     p5.text("Press Q : Remove Walls", 20,160);
     if (sep)
-      p5.text("Ygreen : " + state.data.sepY + ", " + state.data.sepX, 20,190)
+      p5.text("Yponit : " + EndPoint.x+ ", " + EndPoint.x ,  20,190)
     if (exp)
-      p5.text("Xred   : " + state.data.expY + ", " + state.data.expX, 20,210)
+      p5.text("Xpoint : " + StartPoint.x + " , " + StartPoint.y, 20,210)
+    if (walls > 0)
+      p5.text("N of walls : " + walls, 20,230)
   }
   const drawBoardElements = (p5: p5Types ) => {
-    for (let i = 0; i < Xb * Yb; i++) {
-      if (i % Xb === 0 || i < Xb || i > Xb * (Yb - 1) || i % Xb === Xb - 1)
-        Board[i] = 1;
-    }
-    for (let i = 0; i < Xb; i++) 
-      for (let j = 0; j < Yb; j++) 
+    // Drawing Board
+    for (let i = 0; i < Yb; i++)
+    {
+      for (let j = 0; j < Xb; j++)
       {
-        // white 0; red 2; green 3; brown 4; yellow 8;  black;
-        if (Board[j * Xb + i] === 0){
-          p5.fill("white");
-          p5.square(i * UnitGrid, j * UnitGrid, UnitGrid);
+        if (BoardElement[i][j] === 3)
+        {
+          p5.fill("#33ba33");
+          p5.square(j * UnitGrid, i * UnitGrid, UnitGrid);
           p5.noFill();
         }
-        else if (Board[j * Xb + i] === 1){
+        else if (BoardElement[i][j] === 2)
+        {
+          p5.fill("#148ea4");
+          p5.square(j * UnitGrid, i * UnitGrid, UnitGrid);
+          p5.noFill();
+        }
+        else if (BoardElement[i][j] === 1) 
+        {
           p5.fill("black");
-          p5.square(i * UnitGrid, j * UnitGrid, UnitGrid);
+          p5.square(j * UnitGrid, i * UnitGrid, UnitGrid);
           p5.noFill();
         }
-        else if (Board[j * Xb + i] === 2)
-        {
-          p5.fill("red");
-          p5.square(i * UnitGrid, j * UnitGrid, UnitGrid);
-          p5.text(" X ", i * UnitGrid+ 3, j * UnitGrid+ 16);
-          p5.noFill();
-        }
-        else if (Board[j * Xb + i] === 3)
-        {
-          p5.fill("green");
-          p5.square(i * UnitGrid, j * UnitGrid, UnitGrid);
-          p5.text(" Y ", i * UnitGrid+ 3, j * UnitGrid+ 16);
-          p5.noFill();
-        }
-        else if (Board[j * Xb + i] === 4)
+        else if (BoardElement[i][j] === 4) 
         {
           p5.fill("brown");
-          p5.square(i * UnitGrid, j * UnitGrid, UnitGrid);
+          p5.square(j * UnitGrid, i * UnitGrid, UnitGrid);
           p5.noFill();
         }
-        else if (Board[j * Xb + i] === 5)
+        else if (BoardElement[i][j] === 8) 
         {
-          p5.fill("#0c9d0e20");
-          p5.square(i * UnitGrid, j * UnitGrid, UnitGrid);
+          p5.fill("#a49fa4");
+          p5.square(j * UnitGrid, i * UnitGrid, UnitGrid);
           p5.noFill();
         }
-        else if (Board[j * Xb + i] === 8)
+        else if (BoardElement[i][j] === 9) 
         {
-          p5.fill("#9e5b146a");
-          p5.square(i * UnitGrid, j * UnitGrid, UnitGrid);
-          p5.noFill();
-        }
-        else if (Board[j * Xb + i] === 9)
-        {
-          p5.fill("#8051881f");
-          p5.square(i * UnitGrid, j * UnitGrid, UnitGrid);
+          p5.fill("#605461b8");
+          p5.square(j * UnitGrid, i * UnitGrid, UnitGrid);
           p5.noFill();
         }
         else
         {
-          p5.fill("black");
-          p5.square(i * UnitGrid, j * UnitGrid, UnitGrid);
+          p5.fill("#e4dee4c5");
+          p5.square(j * UnitGrid, i * UnitGrid, UnitGrid);
           p5.noFill();
         }
       }
-    if (isFound)
-    {
-      p5.fill("black");
     }
+    if (isFound)
+         p5.line(StartPoint.x * UnitGrid + UnitGrid / 2, StartPoint.y * UnitGrid + UnitGrid / 2, EndPoint.x * UnitGrid + UnitGrid / 2, EndPoint.y * UnitGrid + UnitGrid / 2)
+    // End Drawing Board
     infoBoard(p5);
   }
-  const visualiziation = (p5: p5Types, _queue : any, path : any) => {
-    for (let i = 0; i < _queue.length ; i++)
-    {
-      var current = _queue[i].index
-      if (Board[current] !== 9 && Board[current] !== 3 && Board[current] !== 2 && Board[current] !== 4 && Board[current] !== 1)
-          Board[current] = 9;
-    }
-    p5.fill("green");
-    p5.square(Ypointx, Ypointy, UnitGrid);
-    p5.fill("red");
-    p5.square(Xpointx, Xpointy, UnitGrid);    
-  }
-  const Algo = (p5 : p5Types) => {
-    // white 0; red 2; green 3; brown 4; yellow 8;  black;
-      var Nodes = new Array(Xb * Yb).fill(Node)
-      var _start = Math.round(Xpointy / UnitGrid) * Xb + Math.round(Xpointx / UnitGrid)
-      var _end  = Math.round(Ypointy / UnitGrid) * Xb + Math.round(Ypointx / UnitGrid)
-      // eslint-disable-next-line
-      var Closed = new Array()
-     // eslint-disable-next-line
-      var Open = new Array()
-      var _visited = new Array(Xb * Yb).fill(false)
-      var _current = _start
-      while (_queue.length > 0) _queue.pop()
-      while (Closed.length > 0) Closed.pop()
-    // step 1
-      while (Open.length > 0) Open.pop()
-      Nodes[_start]  = new Node(Xpointy,Xpointx,true, _start)
-      Nodes[_start].g = 1
-      Nodes[_start].h = _end - _start
-      Nodes[_start].f = Nodes[_start].g + Nodes[_start].h
-      Open.push(Nodes[_start ])
-      _queue.push(Nodes[_start])
-
-      while (Open.length > 0 && !isFound)
-      {
-      // step 2
-        if (Open.length <= 0 ) alert("Not found")
-      // step 3
-        var min     = Open[0].f , index = 0
-        for (let i = 0; i < Open.length; i++)
-        {
-          if (Open[i].f < min)
-          {
-            min = Open[i].f
-            index = i
-          }
-        }
-        _visited[_current] = true
-        Open[index].parent = _current
-        _current = Open[index].index
-        Closed.push(Open[index])
-        Open.splice(index, 1)
-        if (_current === _end)
-        {
-          alert(" Y Square found")
-          isFound = true
-          break
-        }
-      // step 4
-      // eslint-disable-next-line
-        var  Nq = new Array()
-        let  tmp = new Node(_current - Xb,_current - Xb,false,_current - Xb)
-        let  tmp1 = new Node(_current + 1,_current + 1,false, _current + 1)
-        let  tmp2 = new Node(_current +  Xb,_current + 1,false, _current + Xb)
-        let  tmp3 = new Node(_current - 1,_current - 1,false, _current - 1)
-        if (!(_current % Xb === 0))
-          Nq.push(tmp3)
-        if (!((_current % Xb === 0) && ((_current - 1) % Xb === 0)))
-          Nq.push(tmp1)
-        if (_current > Xb - 1 && _current - Xb > 0) 
-          Nq.push(tmp)
-        if (_current < Yb * (Xb - 1))
-          Nq.push(tmp2)
-        if (Nq.length <= 0) alert("Not found")
-      // step 5
-      // eslint-disable-next-line
-        var selecteN = new Array()
-        for (let i = 0; i < Nq.length; i++)
-        {
-          if (Nq[i].index === _end)
-          {
-            alert("found")
-            isFound = true
-            break
-          }
-          if (Nq[i].index >= 0 && Nq[i].index < Xb * Yb && Board[Nq[i].index] !== 4 && Board[Nq[i].index] !== 1 &&  _visited[Nq[i].index] === false)
-          {
-            var tmpNode = new Node(Nq[i].y, Nq[i].x, true, Nq[i].index)
-            const IndexO = Nq[i].index
-            //- 
-            var height_start = _start / Xb // 0 - Xb
-            var height_end = _end / Xb // 0 - Xb
-            var heightIndexO = IndexO / Xb // 0 - Xb
-            var width_start = _start % Xb  // 0 - Yb
-            var width_end = _end % Xb  // 0 - Yb
-            var widthIndexO = IndexO % Xb  // 0 - Yb
-            var DirH = Math.abs(widthIndexO - width_end)
-            var DirV = Math.abs(heightIndexO - height_end)
-            var Dh = Math.abs(widthIndexO - width_start)
-            var Dv = Math.abs(heightIndexO - height_start)
-            var tmpG = Math.abs(IndexO - _start) * 1
-            var tmpH = Math.abs(_end - IndexO) * 1
-            tmpG = DirH +  Dh  * 0.9 
-            tmpH = DirV +  Dv  * 0.9
-            tmpNode.setG(tmpG)
-            tmpNode.setH(tmpH)
-            tmpNode.setf()
-            selecteN.push(tmpNode)
-            Open.push(tmpNode)
-          }
-          _visited[Nq[i].index] = true
-        }
-        if (selecteN.length >= 0)
-          continue
-      }
-      // step 6
-      for (let i = 0; i < Closed.length; i++)
-        _queue.push(Closed[i])
-      alert("Queu Lenght " + _queue.length )
-      // trace Pathr
-      // eslint-disable-next-line
-      var path = new Array()
-      for (let i = 0; i < 20; i++)
-        path.push(Closed[i])
-      visualiziation(p5, _queue, path)
-  }
   const handleAction = (p5: p5Types) => {
+    var ypoint = 0
+    var xpoint = 0
+
     if (p5.key === 's' && exp === false)
     {
-      p5.fill("red");
+      p5.fill("#148ea4");
       let x = Math.round(p5.mouseX / UnitGrid) * UnitGrid;
       let y = Math.round(p5.mouseY / UnitGrid) * UnitGrid;
-      if (Board[Math.round(y / UnitGrid) * Xb + Math.round(x / UnitGrid)] !== 1)
-        p5.square(x, y, UnitGrid)
-      if (p5.mouseIsPressed === true && p5.mouseButton === p5.LEFT && Board[Math.round(y / UnitGrid) * Xb + Math.round(x / UnitGrid)] !== 1)
+      // if ( BoardElement[Math.round(y / UnitGrid)][Math.round(x / UnitGrid)] === 0)
+      p5.square(x, y, UnitGrid)
+      if (p5.mouseIsPressed === true && p5.mouseButton === p5.LEFT  )
       {
-        p5.fill("yellow");
-        p5.square(x, y, UnitGrid);
-        Board[Math.round(y / UnitGrid) * Xb + Math.round(x / UnitGrid)] = 2;
-        exp = true;
-        state.data.expX = x;
-        state.data.expY = y;
-        p5.text("X : " + x + ", " + y, UnitGrid,170);
-        Xpointx = x
-        Xpointy = y
+        ypoint = Math.round(y / UnitGrid)
+        xpoint = Math.round(x / UnitGrid)
+        if (xpoint >= 0 && xpoint < Xb - 1 && ypoint >= 0 && ypoint < Yb - 1)
+        {
+          p5.fill("yellow");
+          p5.square(x , y, UnitGrid)
+          BoardElement[ypoint][xpoint] = 2
+          StartPoint.x = Math.round(x / UnitGrid)
+          StartPoint.y = Math.round(y / UnitGrid)
+          exp = true;
+        }
       }
     }
     if (p5.key === 'e' && sep === false)
     {
+      
       p5.fill("green");
       let x = Math.round(p5.mouseX / UnitGrid) * UnitGrid;
       let y = Math.round(p5.mouseY / UnitGrid) * UnitGrid;
-      if (Board[Math.round(y / UnitGrid) * Xb + Math.round(x / UnitGrid)] !== 1)
+      // if ( BoardElement[Math.round(y / UnitGrid)][Math.round(x / UnitGrid)] === 0)
           p5.square(x, y, UnitGrid);
-      if (p5.mouseIsPressed === true && p5.mouseButton === p5.LEFT && Board[Math.round(y / UnitGrid) * Xb + Math.round(x / UnitGrid)] !== 1)
+      if (p5.mouseIsPressed === true && p5.mouseButton === p5.LEFT )
       {
-        p5.fill("yellow");
-        p5.square(x, y, UnitGrid);
-        Board[Math.round(y / UnitGrid) * Xb + Math.round(x / UnitGrid)] = 3;
-        sep = true;
-        state.data.sepX = x;
-        state.data.sepY = y;
-        p5.text("Y : " + x + ", " + y, UnitGrid,190);
-        Ypointx = x
-        Ypointy = y
+        ypoint = Math.round(y / UnitGrid)
+        xpoint = Math.round(x / UnitGrid)
+        if (xpoint >= 0 && xpoint < Xb - 1 && ypoint >= 0 && ypoint < Yb - 1)
+        {
+          p5.fill("yellow");
+          p5.square(x, y, UnitGrid);
+          BoardElement[ypoint][xpoint] = 3
+          EndPoint.x = Math.round(x / UnitGrid)
+          EndPoint.y = Math.round(y / UnitGrid)
+          sep = true;
+        }
       }
     }
     if (p5.key === 'w')
     {
+
       p5.fill("brown");
       let x = Math.round(p5.mouseX / UnitGrid) * UnitGrid;
       let y = Math.round(p5.mouseY / UnitGrid) * UnitGrid;
-      if (Board[Math.round(y / UnitGrid) * Xb + Math.round(x / UnitGrid)] !== 1)
-        p5.square(x, y, UnitGrid);
-      if (p5.mouseIsPressed === true && p5.mouseButton === p5.LEFT && Board[Math.round(y / UnitGrid) * Xb + Math.round(x / UnitGrid)] !== 1)
+      if ( Math.round(y / UnitGrid) )
+
+
+      p5.square(x, y, UnitGrid);
+      if (p5.mouseIsPressed === true && p5.mouseButton === p5.LEFT )
       {
-        p5.fill("yellow");
-        p5.square(x, y, UnitGrid);
-        Board[Math.round(y / UnitGrid) * Xb + Math.round(x / UnitGrid)] = 4;
-        sep = true;
+        ypoint = Math.round(y / UnitGrid)
+        xpoint = Math.round(x / UnitGrid)
+        if (xpoint >= 0 && xpoint < Xb - 1 && ypoint >= 0 && ypoint < Yb - 1)
+        {
+          p5.fill("yellow");
+          p5.square(x, y, UnitGrid);
+          BoardElement[ypoint][xpoint] = 4
+          walls++
+        }
       }
     }
     if (p5.key === 'r')
@@ -363,13 +240,11 @@ export default function Dashboard()
       sep = false;
       isFound = false;
       _queue = []
-      let curr = 0
-      while (curr < Board.length)
-      {
-        if (Board[curr] === 8 || Board[curr] === 9 || Board[curr] === 2 || Board[curr] === 3)
-          Board[curr] = 0;
-          curr++
-      }
+
+      for (let i = 0; i < Yb; i++)
+        for (let j = 0; j < Xb; j++)
+          if (BoardElement[i][j] === 2 || BoardElement[i][j] === 3 ||  BoardElement[i][j] === 9 || BoardElement[i][j] === 8)  
+            BoardElement[i][j] = 0;
     }
     if (p5.key === 'p' && exp && sep && !isFound)
     {
@@ -378,17 +253,167 @@ export default function Dashboard()
     }
     if (p5.key === 'q')
     {
-      let curr = 0
-      while (curr < Board.length)
-      {
-        if (Board[curr] === 4)
-          Board[curr] = 0;
-          curr++
-      }
+      walls = 0;
+      for (let i = 0; i < Yb; i++)
+        for (let j = 0; j < Xb; j++)
+          if (BoardElement[i][j] === 4)  
+            BoardElement[i][j] = 0;
     }
     if (p5.key === 'ñ' || p5.key === ';')
     {
     }
+  }
+  const Algo = (p5 : p5Types) => {
+    // white 0; bleu 2; green 3 ; black 1; brown 4; yellow 8;  StartPoint.x StartPoint.y   EndPoint.x EndPoint.y
+    var BoardElementNodes = []
+    for (let i = 0; i < Yb; i++)  BoardElementNodes[i] = new Array(Xb).fill( new Node(0, 0, false, 0)); 
+    // Set Border Board
+    for (let i = 0; i < Yb; i++)
+      {
+        for (let j = 0; j < Xb; j++)
+        {
+          if (BoardElement[i][j] !==  0) 
+            BoardElementNodes[i][j] = new Node(j, i, true, BoardElement[i][j]);
+          else 
+            BoardElementNodes[i][j] = new Node(j, i, false,BoardElement[i][j]);
+        }
+    }
+    isFound = false
+    BoardElementNodes[StartPoint.y][StartPoint.x] = new Node(StartPoint.x, StartPoint.y, true, 2)
+    BoardElementNodes[EndPoint.y][EndPoint.x]     = new Node(EndPoint.x, EndPoint.y, true, 3)
+    var start   =   BoardElementNodes[StartPoint.y][StartPoint.x]
+    var end     =   BoardElementNodes[EndPoint.y][EndPoint.x]
+    start.parent = start
+    // eslint-disable-next-line
+    var Closed = new Array()
+    // eslint-disable-next-line
+    var Open = new Array()
+    while (_queue.length > 0) _queue.pop()
+    while (Closed.length > 0) Closed.pop()
+    // step 1
+    while (Open.length > 0) Open.pop()
+    var current = start
+    Open.push(current)
+    // _queue.push(current)
+    current.f = Distance(start.x, start.y, end.x, end.y) 
+    var min  = current.f
+    // console.log("Start Point : [" + current.x + " , " + current.y + " ] " + Math.round(current.f))
+    while (!isFound)
+    {
+    // step 2
+      if (Open.length <= 0 ) 
+      {
+        alert("Y Square Not found")
+        isFound = false
+        break
+      }
+    // step 3
+      var  index = 0
+      min = Open[0].f 
+      for (let i = 0; i < Open.length; i++)
+      {
+        if (Open[i].f < min &&  Open[i].index === 0)
+        {
+          if (current.x === end.x && current.y === end.y)
+          {
+            alert("End Square Found")
+            isFound = true
+            break
+          }
+          min = Open[i].f
+          index = i
+        }
+      }
+      // Open[index].parent = _current
+      current = Open[index]
+      // console.log("Current Point : " + current.x + " " + current.y + " : " + Math.round(current.f))
+      Closed.push(Open[index])
+      Open.splice(index, 1)
+      if (current.x === end.x && current.y === end.y)
+      {
+        alert("End Square Found")
+        isFound = true
+        break
+      }
+      // step 4
+      // eslint-disable-next-line
+      var   Nq = new Array()
+      let tmp, tmp1, tmp2, tmp3
+      tmp  = BoardElementNodes[current.y  - 1][current.x    ] 
+      tmp1 = BoardElementNodes[current.y  + 1][current.x    ]
+      tmp2 = BoardElementNodes[current.y     ][current.x + 1]
+      tmp3 = BoardElementNodes[current.y     ][current.x - 1]
+      // if (current.x - 1 < 0 && current.x >= Xb)
+      Nq.push(tmp)
+      // if (current.x + 1 > Xb && current.x <= 0)
+      Nq.push(tmp1)
+      // if (current.y - 1 < 0 && current.y >= Yb)
+      Nq.push(tmp2)
+      // if (current.y + 1 > Yb && current.y <= 0)
+      Nq.push(tmp3)
+      if (Nq.length <= 0) alert("Not found")
+      // step 5
+      for (let i = 0; i < Nq.length; i++)
+      {
+        if (Nq[i].x === end.x &&  Nq[i].y === end.y)
+        {
+          alert("End Square Found")
+          isFound = true
+          Open.push(Nq[i])
+          // Closed.push(Nq[i])
+          break
+        }
+        if (Nq[i] && Nq[i].visited === false && BoardElementNodes[Nq[i].y][Nq[i].x].index === 0)
+        {
+          var tmpG = Distance(Nq[i].x, Nq[i].y, start.x, start.y)
+          var tmpH = Distance(Nq[i].x, Nq[i].y, end.x, end.y)
+          var isTurn = true
+          if ( (Nq[i].x === current.x &&  Nq[i].x === current.parent.x )||( Nq[i].y === current.y &&  Nq[i].y === current.parent.y))
+            isTurn = false
+          var sym = isTurn ? (2 * UnitGrid) : 0
+          
+          Nq[i].visited = true
+          Nq[i].setG(tmpG + sym)
+          Nq[i].setH(tmpH)
+          Nq[i].f =  (tmpG + tmpH)
+          Nq[i].parent = current
+          Open.push(Nq[i])
+        }
+      }
+    }
+    // step 6
+    for (let i = 0; i < Closed.length; i++)
+      _queue.push(Closed[i])
+    visualiziation(p5, _queue)
+  }
+  const visualiziation = (p5: p5Types, _queue : any) => {
+  var current
+  for (let i = 0; i < _queue.length ; i++)
+  {
+    current = _queue[i]
+    if (BoardElement[current.y][current.x] !== 3 && BoardElement[current.y][current.x] !== 2 && BoardElement[current.y][current.x] !== 4 && BoardElement[current.y][current.x] !== 1)
+    {
+      BoardElement[current.y][current.x] = 8;
+    }
+  }
+  // PATH TRACING BY PARENTING  
+  if (isFound)
+  {
+    current = _queue[_queue.length - 1]
+    var dis = 0
+    for (let i = 0; i < 100 ; i++)
+    {
+      dis++
+      BoardElement[current.y][current.x] = 9;
+      current = current.parent
+      if (current === undefined || (BoardElement[current.y][current.x] === 2) )
+        break
+    }
+    // eslint-disable-next-line 
+    alert("Path distance : " + dis + " unit \n" +"Shortest dist  : " + Math.round(Distance(StartPoint.x, StartPoint.y, EndPoint.x , EndPoint.y)) + " unit " )
+  }
+    p5.fill("red");
+    p5.square(EndPoint.x, EndPoint.y, UnitGrid);    
   }
   const draw = (p5: p5Types) => {
     drawBoardElements(p5)
@@ -399,4 +424,10 @@ export default function Dashboard()
       <Sketch setup={setup} draw={draw} />
     </div>
   )
+}
+function  sqr(a : number) {
+  return a*a;
+}
+function Distance(x1 : number , y1: number, x2: number, y2: number) {
+  return Math.sqrt(sqr(y2 - y1) + sqr(x2 - x1));
 }

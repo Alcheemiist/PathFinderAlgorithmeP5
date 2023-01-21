@@ -9,7 +9,7 @@ Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
 The page will reload if you make edits.\
 You will also see any lint errors in the console.
 
-### `Marks`
+### `Commands`
 
 - Presss `s` to select start square X
 - Presss `e` to select end square Y
@@ -17,10 +17,26 @@ You will also see any lint errors in the console.
 - Presss `r` to reset the board except walls
 - Presss `q` to clear the board from walls
 
-- `Ygreen` cordinate of start square
-- `Xred` cordinate of end square
+### `Marks`
+
+- `Ygreen`  cordinate of start square
+- `Xred`    cordinate of end square
+
+- `Bleu Square`  start square
+- `green Square` end square
+- `black Square` Boundary square 
+- `brown square` wall square
+
+- `Grey Squares` visited && discovred squares
+- `Black Path`   selected path by algorithm
 
 ### `Demo`
 
-![MarineGEO circle logo](/demo.png "MarineGEO logo")
+![MarineGEO circle logo](/demos/demo.png.png "Demo logo")
+![MarineGEO circle logo](/demos/demo1.png.png "Demo logo")
+![MarineGEO circle logo](/demos/demo2.png.png "Demo logo")
+![MarineGEO circle logo](/demos/demo4.png.png "Demo logo")
+![MarineGEO circle logo](/demos/result4.png.png "Demo logo")
+![MarineGEO circle logo](/demos/demo5.png.png "Demo logo")
+![MarineGEO circle logo](/demos/result5.png.png "Demo logo")
 
