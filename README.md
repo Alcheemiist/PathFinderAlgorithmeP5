@@ -1,40 +1,46 @@
-# Path Finding Visualizer Web app using A* algorithm and P5.js
+# Path Finder — A* visualiser (React + p5.js)
 
-Path Finding Visualizer is a web-based application that uses the A* algorithm to find the shortest path with least turns between two points on a grid. The app visualizes the process by animating the algorithm as it searches for the optimal path, allowing users to understand how the A* algorithm works. Users can also interact with the app by adjusting the grid size, placing obstacles on the grid and adjusting the heuristic value to see the impact on the algorithm's performance. 
+An interactive grid that animates A* search between two points. The cost function adds a **turn penalty**, so among equally short routes it prefers paths with fewer turns. You draw walls, place start and end, and watch the open and closed sets grow cell by cell.
 
-### `npm install`
-to install all the dependencies
-### `npm start`
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+<p align="center"><img src="demos/demo1.png" width="45%"> <img src="demos/result4.png" width="45%"></p>
 
-### `Commands`
+## How it works
 
-- Presss `s` to select start square X
-- Presss `e` to select end square Y
-- Presss `w` to select wall square
-- Presss `r` to reset the board except walls
-- Presss `q` to clear the board from walls
+- **Search:** A* with Euclidean `g` (distance from start) and `h` (distance to goal).
+- **Turn penalty:** when a step changes direction relative to the parent's heading, `g` gets an extra `2 × cell size`. This pushes the search toward straight, low-turn routes, which suit robots and vehicles better than zig-zag shortest paths.
+- **Rendering:** a p5.js sketch embedded in React (`react-p5`) draws the grid, visited cells and the final path every frame.
 
-### `Description`
+## Controls
 
-- `Ygreen`  cordinate of start square
-- `Xred`    cordinate of end square
+| Key | Action |
+|---|---|
+| `s` | Place the start cell |
+| `e` | Place the end cell |
+| `w` | Draw walls |
+| `p` | Run the search |
+| `r` | Reset the board, keeping walls |
+| `q` | Clear all walls |
 
-- `Bleu Square`  start square
-- `green Square` end square
-- `black Square` Boundary square 
-- `brown square` wall square
+Legend: blue = start · green = end · brown = wall · grey = explored · black line = chosen path.
 
-- `Grey Squares` visited && discovred squares
-- `Black Path`   selected path by algorithm
+## Run it
 
-### `Demo`
+```bash
+git clone https://github.com/Alcheemiist/PathFinderAlgorithmeP5.git
+cd PathFinderAlgorithmeP5
+npm install
+npm start            # http://localhost:3000
+```
 
-![MarineGEO circle logo2](/demos/demo1.png "Demo2 logo")    ![MarineGEO circle logo3](/demos/demo2.png "Demo3 logo")
-![MarineGEO circle logo2](/demos/demo3.png "Demo2 logo")    ![MarineGEO circle logo3](/demos/demo4.png "Demo3 logo")
-![MarineGEO circle log4](/demos/demo4.png "Demo5 logo")     ![MarineGEO circle log5](/demos/result4.png "Demo8 logo")
-![MarineGEO circle logo6](/demos/demo5.png "Demo8 logo")    ![MarineGEO circle logo7](/demos/result5.png "Demo8 logo")
+## More demos
 
+<p align="center">
+<img src="demos/demo2.png" width="45%"> <img src="demos/demo3.png" width="45%">
+<img src="demos/demo5.png" width="45%"> <img src="demos/result5.png" width="45%">
+</p>
+
+Stack: TypeScript · React 18 · p5.js (`react-p5`) · styled-components.
+
+---
+
+Built by [Elmahdi Elaazmi](https://elaazmielmahdi.com).
